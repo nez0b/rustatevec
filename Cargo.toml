@@ -1,0 +1,26 @@
+[workspace]
+resolver = "2"
+members = ["crates/qsv-core", "crates/qsv-cli"]
+# crates/qsv-bench is added at the benchmarking milestone (pulls criterion).
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["nez0b"]
+rust-version = "1.86"
+repository = ""
+
+# Optimized library + binaries. Keep debug symbols so profilers (samply / Instruments /
+# perf) can attribute time to source — essential for the optimization story.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1
+
+# Benchmarks inherit release-like settings.
+[profile.bench]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1

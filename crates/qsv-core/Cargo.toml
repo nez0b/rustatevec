@@ -1,0 +1,21 @@
+[package]
+name = "qsv-core"
+version = "0.0.0"
+description = "High-performance quantum statevector simulator — core library"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["f64"]
+# Scalar precision selection is informational at v0.0 (everything is generic over `Real`);
+# these gate which Real impls downstream crates default to.
+f64 = []
+f32 = []
+# Swaps the SIMD complex-multiply impl to `std::simd` (requires nightly). Off by default.
+nightly-simd = []
+
+[dependencies]
+
+[dev-dependencies]

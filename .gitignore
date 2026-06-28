@@ -1,0 +1,22 @@
+# Rust
+/target
+**/target
+# Cargo.lock IS committed (this workspace ships binaries: qsv-cli, qsv-bench)
+
+# Reference simulators (large; cloned locally for reference, not versioned here)
+/references/
+
+# Benchmark artifacts / golden data that is large
+/bench/golden/*.npy
+/bench/results/*.csv
+
+# OS / editor
+**/.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python (bench harness venv)
+.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,15 @@
+[package]
+name = "qsv-cli"
+version = "0.0.0"
+description = "Command-line runner for the qsv statevector simulator"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "qsv"
+path = "src/main.rs"
+
+[dependencies]
+qsv-core = { path = "../qsv-core" }
