@@ -15,7 +15,9 @@
 //! v0.0 exposes one general `apply(matrix, qubits)`; arity-specialized fast paths
 //! (`apply_1q`, `apply_diagonal`, …) are added with the optimized CPU backend.
 
+pub mod bitshift;
 pub mod reference;
+pub mod reshape;
 
 use crate::circuit::Circuit;
 use crate::complex::Cplx;

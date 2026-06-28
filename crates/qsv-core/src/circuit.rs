@@ -119,6 +119,9 @@ impl<R: Real> Circuit<R> {
     pub fn cz(&mut self, a: u32, b: u32) -> &mut Self {
         self.push(gate::cz(), &[a, b])
     }
+    pub fn cphase(&mut self, control: u32, target: u32, lambda: f64) -> &mut Self {
+        self.push(gate::cphase(lambda), &[control, target])
+    }
     pub fn swap(&mut self, a: u32, b: u32) -> &mut Self {
         self.push(gate::swap(), &[a, b])
     }

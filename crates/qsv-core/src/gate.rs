@@ -128,6 +128,10 @@ pub fn cx<R: Real>() -> DenseGate<R> {
 pub fn cz<R: Real>() -> DenseGate<R> {
     controlled_1q(&z())
 }
+/// Controlled phase `diag(1, 1, 1, e^{iλ})` on `qs = [control, target]` (symmetric).
+pub fn cphase<R: Real>(lambda: f64) -> DenseGate<R> {
+    controlled_1q(&phase(lambda))
+}
 /// SWAP on `qs = [a, b]`.
 pub fn swap<R: Real>() -> DenseGate<R> {
     let mut data = vec![Cplx::<R>::zero(); 16];

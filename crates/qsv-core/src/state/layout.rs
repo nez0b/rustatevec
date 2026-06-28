@@ -54,6 +54,26 @@ pub fn scatter_bits(sub: usize, qs: &[u32]) -> usize {
     x
 }
 
+/// Insert a `0` bit at every position in `sorted_bits`, which **must be strictly ascending**.
+///
+/// Produces a "base" index whose `sorted_bits` positions are all 0 and whose remaining bits
+/// are `index`'s bits in order. As `index` ranges `0..2^(N-m)` (m = `sorted_bits.len()`),
+/// the result ranges over exactly the `2^(N-m)` indices that are 0 at all those positions —
+/// the per-block anchor for an m-qubit gate. Inserting smallest-first keeps each later
+/// (larger) position correct.
+#[inline]
+pub fn insert_zero_bits(index: usize, sorted_bits: &[u32]) -> usize {
+    debug_assert!(
+        sorted_bits.windows(2).all(|w| w[0] < w[1]),
+        "insert_zero_bits requires strictly ascending positions"
+    );
+    let mut x = index;
+    for &b in sorted_bits {
+        x = insert_zero_bit(x, b);
+    }
+    x
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -97,5 +117,24 @@ mod tests {
         }
         // gather picks exactly the named bits: index 0b100101, qs=[0,2,5] → bits {1,1,1}=0b111
         assert_eq!(gather_bits(0b100101, &qs), 0b111);
+    }
+
+    #[test]
+    fn insert_zero_bits_tiles_the_space() {
+        // For N=4, a 2-qubit gate on positions {1,3}: the 2^(4-2)=4 base anchors, each
+        // combined with the 2^2 sub-indices, must cover all 16 indices exactly once.
+        let targets = [1u32, 3];
+        let mut seen = [false; 16];
+        for o in 0..4usize {
+            let base = insert_zero_bits(o, &targets);
+            assert_eq!(extract_bit(base, 1), 0);
+            assert_eq!(extract_bit(base, 3), 0);
+            for s in 0..4usize {
+                let full = base | scatter_bits(s, &targets);
+                assert!(!seen[full], "index {full} visited twice");
+                seen[full] = true;
+            }
+        }
+        assert!(seen.iter().all(|&b| b), "not all indices covered");
     }
 }

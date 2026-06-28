@@ -51,8 +51,8 @@ plot. Speedups are honest regimes.
 | Ver | Change | Regime |
 |---|---|---|
 | **v0.0** ✅ | scaffold + naive `RefBackend` oracle + correctness tests | caps ~13q; the oracle |
-| v0.1 | reshape/tensor-contraction apply | ~24q, slow |
-| v0.2 | bit-shift kernel (in-place, scalar) | order of magnitude |
+| **v0.1** ✅ | `ReshapeBackend` — block/out-of-place apply | general, allocation-heavy |
+| **v0.2** ✅ | `BitShiftBackend` — in-place `insert_zero_bit` pair kernel | scales to ~24q+ |
 | v0.3 | unchecked indexing + stack matrices + zero hot-path alloc | 1.3–2× |
 | v0.4 | high/low target dispatch | 1.3–2× |
 | v0.5 | multithreading (rayon) | ~4–6× |

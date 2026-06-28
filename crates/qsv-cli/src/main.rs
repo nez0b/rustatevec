@@ -16,7 +16,8 @@ fn main() {
         circuit.cx(0, q);
     }
 
-    let backend = RefBackend;
+    // v0.2 in-place kernel — fast enough for GHZ on 20+ qubits.
+    let backend = BitShiftBackend;
     let state = backend.execute(&circuit);
     let probs = backend.probabilities(&state);
 
