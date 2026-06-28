@@ -7,7 +7,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-D warnings"
 
 jobs:
   test:
@@ -20,7 +19,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      # Pin to the project MSRV for deterministic CI (no surprise lints from a moving
+      # `stable`). `-D warnings` is scoped to clippy below so it never denies dep warnings.
+      - uses: dtolnay/rust-toolchain@1.86.0
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
