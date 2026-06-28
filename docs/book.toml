@@ -1,0 +1,17 @@
+[book]
+title = "qsv — quantum statevector simulator"
+authors = ["nez0b"]
+description = "Design, optimization, and usage notes for the qsv statevector simulator."
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+mathjax-support = true
+git-repository-url = ""
+no-section-label = false
+
+[output.html.fold]
+enable = true
+level = 1

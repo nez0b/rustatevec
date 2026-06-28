@@ -1,0 +1,26 @@
+[package]
+name = "qsv-bench"
+version = "0.0.0"
+description = "Benchmarks and profiling workloads for qsv"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+qsv-core = { path = "../qsv-core" }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "throughput"
+harness = false
+
+# A long-running workload for sampling profilers (samply / Instruments / perf).
+[[bin]]
+name = "qsv-profile"
+path = "src/bin/profile.rs"
+bench = false
+test = false

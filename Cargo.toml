@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/qsv-core", "crates/qsv-cli"]
-# crates/qsv-bench is added at the benchmarking milestone (pulls criterion).
+members = ["crates/qsv-core", "crates/qsv-cli", "crates/qsv-bench"]
 
 [workspace.package]
 edition = "2021"

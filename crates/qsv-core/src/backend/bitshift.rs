@@ -7,7 +7,7 @@
 //! buffer, applying the matrix, and writing back in place.
 //!
 //! This is the same indexing every production simulator uses (QuEST/qsim/Aer/Yao); see
-//! `docs/research/01-cpu-simulators.md`. It unlocks ~30-qubit simulation on the dev box and
+//! `docs/src/research/cpu-simulators.md`. It unlocks ~30-qubit simulation on the dev box and
 //! is the baseline that SIMD (v0.7), fusion (v0.8), and threading (v0.5) build on.
 
 use super::Backend;
