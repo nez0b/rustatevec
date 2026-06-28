@@ -9,7 +9,7 @@ src = "src"
 default-theme = "navy"
 preferred-dark-theme = "navy"
 mathjax-support = true
-git-repository-url = ""
+git-repository-url = "https://github.com/nez0b/rustatevec"
 no-section-label = false
 
 [output.html.fold]

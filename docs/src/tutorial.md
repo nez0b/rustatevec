@@ -78,11 +78,30 @@ runnable and benchmarkable, and so every fast kernel can be validated against th
 | `RefBackend` | naive, independently-implemented oracle | correctness checks, small `N` |
 | `ReshapeBackend` | block-structured, out-of-place (v0.1) | the milestone baseline |
 | `BitShiftBackend` | in-place bit-shift kernel (v0.2) | the reference fast kernel |
-| `CpuBackend` | bounds-check-free + nested-block + rayon (v0.3–v0.5) | **real simulation (fastest)** |
+| `CpuBackend` | bounds-check-free + nested-block + diagonal + rayon (v0.3–v0.6) | **real simulation (fastest)** |
+| `SimdBackend` | `CpuBackend` + `wide::f64x4` 1q kernel (v0.7), `f64` only | SIMD experiments |
 
 `CpuBackend::parallel()` (the `Default`) multithreads above a size threshold;
 `CpuBackend::serial()` forces single-threaded. Build with `--no-default-features` to drop the
-`parallel` feature (and the rayon dependency) entirely.
+`parallel`/`simd` features (and the rayon/wide dependencies) entirely.
+
+## Gate fusion
+
+`fuse` rewrites a circuit so adjacent gates spanning a few qubits become single composite
+gates — fewer passes over the state, the dominant optimization on structured circuits. It is a
+pure `Circuit -> Circuit` transform, so it composes with any backend:
+
+```rust
+use qsv_core::prelude::*;
+use qsv_core::circuits::qft;
+
+let circuit = qft(16);
+let fused = fuse(&circuit, &FusionConfig::default()); // default max_qubits = 4
+let state = CpuBackend::default().execute(&fused);     // same result, fewer passes
+```
+
+`fuse` never changes the computed state (verified against the oracle across `max_qubits`
+settings); it only reduces the number of gate applications.
 
 ```rust
 // Identical circuit, different engine — the seam in action.

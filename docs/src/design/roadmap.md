@@ -13,12 +13,17 @@ is in [How we optimize](optimization.md).
 | v0.3 | `CpuBackend` — bounds-check-free access + stack gate matrices | ✅ done |
 | v0.4 | `CpuBackend` — cache-friendly nested-block 1q kernel | ✅ done |
 | v0.5 | `CpuBackend::parallel()` — rayon threading | ✅ done |
-| v0.6 | diagonal-gate fast path | ⬜ next |
-| v0.7 | SIMD complex multiply (SoA + `wide`; nightly `std::simd`) | ⬜ |
-| v0.8 | **gate fusion** (cost model) | ⬜ |
-| v0.9 | cache-blocking + prefetch + non-temporal stores | ⬜ |
+| v0.6 | `CpuBackend` — diagonal-gate fast path | ✅ done |
+| v0.7 | `SimdBackend` — portable `wide::f64x4` 1q kernel | ✅ done (null result¹) |
+| v0.8 | **gate fusion** (`fusion::fuse`) | ✅ done |
+| v0.9 | cache-block the multi-qubit kernel + prefetch + NT stores | ⬜ next² |
 | v0.10 | ILP, x86 BMI2, alias-table sampling, parallel prefix-sum | ⬜ |
 | v1.0 | roofline-validated, documented, cross-sim benchmarked | ⬜ |
+
+¹ SIMD measured ~0% on the 1q kernel — it's bandwidth-bound, not arithmetic-bound. See
+[benchmarking](benchmarking.md). Expected to matter for fused multi-qubit matvecs and x86 AVX-512.
+² Promoted to "next" by the v0.8 finding: fusion's win is currently capped at large N by the
+multi-qubit kernel's scattered access — cache-blocking it is the unlock.
 
 Also planned but out of the v1 critical path: density-matrix / noise simulation, a GPU
 backend (CUDA/cuTile or Metal) behind the `Backend` seam, and distributed multi-node support

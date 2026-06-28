@@ -1,5 +1,8 @@
 # qsv
 
+[![CI](https://github.com/nez0b/rustatevec/actions/workflows/ci.yml/badge.svg)](https://github.com/nez0b/rustatevec/actions/workflows/ci.yml)
+[![Docs](https://github.com/nez0b/rustatevec/actions/workflows/pages.yml/badge.svg)](https://nez0b.github.io/rustatevec/)
+
 A high-performance **quantum statevector simulator in Rust**, built as a study in
 performance engineering: cache-, SIMD-, and threading-aware design driven by profiling and
 benchmarked honestly against the established simulators (qsim, Qiskit-Aer, QuEST, spinoza).
@@ -9,21 +12,30 @@ benchmarked honestly against the established simulators (qsim, Qiskit-Aer, QuEST
 > behaviour, not micro-optimizing arithmetic. The repo is structured to *demonstrate* this,
 > milestone by milestone, with a roofline plot to back it up.
 
-📖 **Documentation book:** `mdbook serve docs` (or read the chapters under
-[`docs/src/`](docs/src/)) — see especially [How we optimize](docs/src/design/optimization.md),
-[The core kernel](docs/src/design/kernel.md), and the [roadmap](docs/src/design/roadmap.md).
+📖 **Documentation book:** published at **<https://nez0b.github.io/rustatevec/>** (or
+`mdbook serve docs` locally) — see especially [How we optimize](docs/src/design/optimization.md),
+[The core kernel](docs/src/design/kernel.md), [Benchmarking](docs/src/design/benchmarking.md),
+and the [roadmap](docs/src/design/roadmap.md).
 
 ## Status
 
-**v0.0 – v0.2 done.** Core types, a Structure-of-Arrays `StateVector`, the universal
-`insert_zero_bit` index math, a standard gate set + circuit builder, and a pluggable
-`Backend` trait with **three** implementations: a naive `RefBackend` oracle, the
-out-of-place `ReshapeBackend` (v0.1), and the in-place `BitShiftBackend` pair kernel (v0.2,
-scales to ~30 qubits). A differential test suite validates every backend against the oracle,
-and `qsv-bench` provides criterion benchmarks + a profiling workload.
+**v0.0 – v0.8 done.** A pluggable `Backend` trait with several implementations validated
+against a naive oracle by a differential test suite:
 
-Next: v0.3 (unchecked indexing / stack gate matrices) → v0.4 (high/low dispatch) → v0.5
-(threading); see the [roadmap](docs/src/design/roadmap.md).
+- `RefBackend` (oracle) · `ReshapeBackend` (v0.1) · `BitShiftBackend` (v0.2)
+- `CpuBackend` — bounds-check-free nested-block kernel (v0.3/4), rayon threading (v0.5),
+  diagonal fast path (v0.6); **the default**
+- `SimdBackend` — `wide::f64x4` 1q kernel (v0.7)
+- `fusion::fuse` — gate fusion (v0.8)
+
+Headline numbers on an M3 Pro: the threaded kernel hits **~85% of memory bandwidth** at 24
+qubits, and fusion gives **~1.8×** on QFT(14). SIMD was a measured **null result** on the 1q
+kernel (it's bandwidth-bound) — reported honestly in the
+[benchmarking chapter](docs/src/design/benchmarking.md).
+
+Next: v0.9 (cache-block the multi-qubit kernel — the unlock for fusion at large N); then a GPU
+backend (CUDA/cuTile) behind the same seam. See [`todo.md`](todo.md) and the
+[roadmap](docs/src/design/roadmap.md).
 
 ## Quick start
 

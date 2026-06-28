@@ -76,6 +76,36 @@ bandwidth roof. Per the **stop criterion** (≥ 70–80% of STREAM bandwidth), m
 *this* kernel further is noise — the next real win must change the bytes-moved equation, i.e.
 **gate fusion** (v0.8). The data wrote the roadmap.
 
+## v0.6–v0.8: three findings, reported honestly
+
+**v0.6 diagonal fast path** — Z/S/T/PHASE/RZ/CZ/RZZ run a single sequential pass (one
+complex-mul per amplitude, no `2^q` stride). Real win for phase-heavy circuits (QFT/QAOA) and
+high-target-qubit gates; modest at large N where everything is bandwidth-bound.
+
+**v0.7 SIMD — a measured null result.** `wide::f64x4` on the 1-qubit kernel: **~0% at every
+size** (n=12 2.01 vs 2.04, n=20 1.89 vs 1.89, n=24 1.79 vs 1.80 Gelem/s vs the scalar
+`CpuBackend`). The 1q gate's arithmetic intensity (~0.13 FLOP/byte) is so low that widening the
+ALUs changes nothing — the cache-friendly scalar kernel is already bandwidth-bound at L2 *and*
+DRAM. This is the roofline taken to its conclusion, not a bug. SIMD is expected to pay where
+arithmetic intensity is high: the fused multi-qubit matvecs below, and x86 **AVX-512** (64-byte
+loads vs NEON's 16) — flagged for the Intel box (see `todo.md`).
+
+**v0.8 gate fusion — the headline, with a caveat the benchmark surfaced.** Fused vs unfused
+QFT on `CpuBackend::parallel()`:
+
+| qubits | unfused | fused | speedup |
+| --- | --- | --- | --- |
+| 14 | 4.43 ms | 2.46 ms | **~1.8×** |
+| 18 | 23.3 ms | 23.4 ms | ~1.0× |
+
+Fusion cuts passes over memory, so at n=14 it's a clean ~1.8×. At n=18 it washes out — and
+*why* is the interesting part: unfused QFT's controlled-phases already use the fast diagonal
+kernel, whereas fused H+phase blocks run the general `apply_mq` kernel, whose **scattered
+gather/scatter** erodes effective bandwidth at large N enough to cancel the pass reduction. So
+the fusion win is real but currently **gated by the multi-qubit kernel's access pattern** —
+exactly what **v0.9 (cache-blocking `apply_mq`)** targets. The benchmark didn't just validate
+fusion; it located the next bottleneck.
+
 ## Roofline methodology
 
 1. Measure the machine's empirical peak bandwidth with a STREAM-triad microbench (don't trust
