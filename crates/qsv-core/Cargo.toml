@@ -8,17 +8,20 @@ authors.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["f64", "parallel"]
+default = ["f64", "parallel", "simd"]
 # Scalar precision selection is informational at v0.0 (everything is generic over `Real`);
 # these gate which Real impls downstream crates default to.
 f64 = []
 f32 = []
 # Multithreaded kernels (rayon). On by default; disable for a dependency-free core build.
 parallel = ["dep:rayon"]
+# Portable-SIMD kernels via the stable `wide` crate (SimdBackend). On by default.
+simd = ["dep:wide"]
 # Swaps the SIMD complex-multiply impl to `std::simd` (requires nightly). Off by default.
 nightly-simd = []
 
 [dependencies]
 rayon = { version = "1", optional = true }
+wide = { version = "0.7", optional = true }
 
 [dev-dependencies]

@@ -37,10 +37,20 @@ fn reshape_and_bitshift_match_oracle_on_random_circuits() {
         let bitshift = run(&BitShiftBackend, &c);
         let cpu_serial = run(&CpuBackend::serial(), &c);
         let cpu_par = run(&CpuBackend::parallel(), &c);
+        let simd_serial = run(&SimdBackend::serial(), &c);
+        let simd_par = run(&SimdBackend::parallel(), &c);
 
         assert!(
             max_abs_diff(&oracle, &reshape) < TOL,
             "ReshapeBackend diverged from oracle (seed {seed}, n {n})"
+        );
+        assert!(
+            max_abs_diff(&oracle, &simd_serial) < TOL,
+            "SimdBackend::serial diverged from oracle (seed {seed}, n {n})"
+        );
+        assert!(
+            max_abs_diff(&oracle, &simd_par) < TOL,
+            "SimdBackend::parallel diverged from oracle (seed {seed}, n {n})"
         );
         assert!(
             max_abs_diff(&oracle, &bitshift) < TOL,
@@ -79,6 +89,7 @@ fn cpu_threaded_matches_oracle_above_threshold() {
         let oracle = run(&RefBackend, &c);
         let cpu_par = run(&CpuBackend::parallel(), &c);
         let cpu_serial = run(&CpuBackend::serial(), &c);
+        let simd_par = run(&SimdBackend::parallel(), &c);
         assert!(
             max_abs_diff(&oracle, &cpu_par) < TOL,
             "threaded seed {seed}"
@@ -86,6 +97,10 @@ fn cpu_threaded_matches_oracle_above_threshold() {
         assert!(
             max_abs_diff(&oracle, &cpu_serial) < TOL,
             "serial seed {seed}"
+        );
+        assert!(
+            max_abs_diff(&oracle, &simd_par) < TOL,
+            "simd threaded seed {seed}"
         );
     }
 }

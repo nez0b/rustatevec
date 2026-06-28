@@ -45,6 +45,7 @@ pub mod prelude {
     pub use crate::backend::cpu::CpuBackend;
     pub use crate::backend::reference::RefBackend;
     pub use crate::backend::reshape::ReshapeBackend;
+    pub use crate::backend::simd::SimdBackend;
     pub use crate::backend::Backend;
     pub use crate::circuit::Circuit;
     pub use crate::complex::Cplx;

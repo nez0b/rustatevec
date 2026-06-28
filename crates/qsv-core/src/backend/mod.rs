@@ -19,6 +19,7 @@ pub mod bitshift;
 pub mod cpu;
 pub mod reference;
 pub mod reshape;
+pub mod simd;
 
 use crate::circuit::Circuit;
 use crate::complex::Cplx;
