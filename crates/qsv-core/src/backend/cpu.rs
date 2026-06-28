@@ -24,7 +24,7 @@ use super::Backend;
 use crate::complex::Cplx;
 use crate::gate::DenseGate;
 use crate::real::Real;
-use crate::state::layout::{insert_zero_bits, scatter_bits};
+use crate::state::layout::{gather_bits, insert_zero_bits, scatter_bits};
 use crate::state::StateVector;
 
 #[cfg(feature = "parallel")]
@@ -84,7 +84,58 @@ fn one_qubit_block<R: Real>(
     }
 }
 
+/// One contiguous chunk of a diagonal gate: multiply each amplitude by its phase. The phase
+/// depends only on the gate-qubit bits of the global index `base + o`, so this is a single
+/// sequential pass — no pairing, no stride.
+#[inline]
+fn diag_chunk<R: Real>(
+    base: usize,
+    re_c: &mut [R],
+    im_c: &mut [R],
+    diag: &[Cplx<R>],
+    qubits: &[u32],
+) {
+    for (o, (r, i)) in re_c.iter_mut().zip(im_c.iter_mut()).enumerate() {
+        let s = gather_bits(base + o, qubits);
+        let (dr, di) = (diag[s].re, diag[s].im);
+        let (xr, xi) = (*r, *i);
+        *r = dr * xr - di * xi;
+        *i = dr * xi + di * xr;
+    }
+}
+
 impl CpuBackend {
+    /// v0.6 — diagonal gate: one sequential pass, half the arithmetic of the pairing kernel.
+    fn apply_diagonal<R: Real>(
+        &self,
+        state: &mut StateVector<R>,
+        gate: &DenseGate<R>,
+        qubits: &[u32],
+    ) {
+        let sub = 1usize << qubits.len();
+        let mut diag_arr = [Cplx::<R>::zero(); MAX_SUB];
+        for (s, d) in diag_arr.iter_mut().enumerate().take(sub) {
+            *d = gate.at(s, s);
+        }
+        let diag = &diag_arr[..sub];
+        let dim = state.dim();
+        let (re, im) = state.parts_mut();
+
+        let _threaded = self.parallel && dim >= (PARALLEL_MIN_PAIRS << 1);
+        #[cfg(feature = "parallel")]
+        if _threaded {
+            let nthreads = rayon::current_num_threads().max(1);
+            let chunk = (dim / (4 * nthreads)).max(1 << 10);
+            re.par_chunks_mut(chunk)
+                .zip(im.par_chunks_mut(chunk))
+                .enumerate()
+                .for_each(|(c, (rc, ic))| diag_chunk(c * chunk, rc, ic, diag, qubits));
+            return;
+        }
+
+        diag_chunk(0, re, im, diag, qubits);
+    }
+
     fn apply_1q<R: Real>(&self, state: &mut StateVector<R>, gate: &DenseGate<R>, q: u32) {
         let g = [gate.at(0, 0), gate.at(0, 1), gate.at(1, 0), gate.at(1, 1)];
         let half = 1usize << q;
@@ -220,7 +271,9 @@ impl<R: Real> Backend<R> for CpuBackend {
 
     fn apply(&self, state: &mut StateVector<R>, gate: &DenseGate<R>, qubits: &[u32]) {
         debug_assert_eq!(gate.n_qubits() as usize, qubits.len());
-        if qubits.len() == 1 {
+        if gate.is_diagonal() {
+            self.apply_diagonal(state, gate, qubits);
+        } else if qubits.len() == 1 {
             self.apply_1q(state, gate, qubits[0]);
         } else {
             self.apply_mq(state, gate, qubits);

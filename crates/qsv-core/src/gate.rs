@@ -48,6 +48,23 @@ impl<R: Real> DenseGate<R> {
     pub fn row_major(&self) -> &[Cplx<R>] {
         &self.data
     }
+
+    /// True if every off-diagonal entry is exactly zero — i.e. the gate is a pure phase map
+    /// (Z, S, T, PHASE, RZ, CZ, CPHASE, RZZ, …, and any fusion of such). Diagonal gates admit
+    /// a single-pass kernel: no amplitude pairing, no stride, half the arithmetic. The scan is
+    /// `O(4^m)`, run once per gate application (negligible beside the `2^N` amplitude work).
+    pub fn is_diagonal(&self) -> bool {
+        let dim = self.dim();
+        let zero = Cplx::zero();
+        for r in 0..dim {
+            for col in 0..dim {
+                if r != col && self.at(r, col) != zero {
+                    return false;
+                }
+            }
+        }
+        true
+    }
 }
 
 /// Wrap a 1-qubit gate `u` as a 2-qubit controlled gate (`qs = [control, target]`).
@@ -198,6 +215,24 @@ mod tests {
                 assert!(approx_eq(acc, want, 0.0));
             }
         }
+    }
+
+    #[test]
+    fn is_diagonal_classifies_gates() {
+        assert!(z::<f64>().is_diagonal());
+        assert!(s_gate::<f64>().is_diagonal());
+        assert!(t_gate::<f64>().is_diagonal());
+        assert!(rz::<f64>(0.3).is_diagonal());
+        assert!(phase::<f64>(1.1).is_diagonal());
+        assert!(cz::<f64>().is_diagonal());
+        assert!(rzz::<f64>(0.5).is_diagonal());
+        assert!(cphase::<f64>(0.9).is_diagonal());
+        // Non-diagonal:
+        assert!(!h::<f64>().is_diagonal());
+        assert!(!x::<f64>().is_diagonal());
+        assert!(!rx::<f64>(0.4).is_diagonal());
+        assert!(!cx::<f64>().is_diagonal());
+        assert!(!swap::<f64>().is_diagonal());
     }
 
     #[test]
