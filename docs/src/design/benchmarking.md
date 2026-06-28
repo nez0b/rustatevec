@@ -35,30 +35,46 @@ cargo bench -p qsv-bench --bench throughput -- \
 
 criterion writes HTML reports (with plots) to `target/criterion/`.
 
-## Example: the v0.2 scalar kernel
+## Milestone results so far
 
-A single Hadamard on a mid-range qubit, `BitShiftBackend`, Apple M3 Pro, single-threaded:
+A single Hadamard on a mid-range qubit, throughput in amplitude-updates/sec, Apple M3 Pro
+(11 cores). Higher is better.
 
-| qubits | state size | time/gate | throughput |
-| --- | --- | --- | --- |
-| 12 | 64 KB (L2) | ~3.95 µs | ~1.04 Gelem/s |
-| 16 | 1 MB | ~70 µs | ~0.93 Gelem/s |
-| 20 | 16 MB | ~1.07 ms | ~0.98 Gelem/s |
-| 24 | 256 MB (DRAM) | ~17.2 ms | ~0.97 Gelem/s |
+| qubits | state | `bitshift` (v0.2) | `cpu_serial` (v0.3/4) | `cpu_parallel` (v0.5) |
+| --- | --- | --- | --- | --- |
+| 12 | 64 KB | ~1.0 Gelem/s | ~2.0 Gelem/s | ~2.0 Gelem/s¹ |
+| 20 | 16 MB | 0.98 Gelem/s | 1.91 Gelem/s | 6.42 Gelem/s |
+| 24 | 256 MB | 0.99 Gelem/s | 1.80 Gelem/s | 3.97 Gelem/s |
 
-Two honest readings of this:
+¹ below the threading threshold (`n < 13`), so `parallel` runs serially — by design.
 
-- **It is roughly flat** from cache-resident to DRAM-resident — ~1 Gelem/s throughout. At ~32
-  bytes of traffic per update (read + write a 16-byte amplitude) that is ~32 GB/s, only ~20%
-  of the M3 Pro's ~150 GB/s.
-- That flatness means the *single-threaded scalar* kernel is currently limited by **per-element
-  work** (index arithmetic + complex multiply), not memory bandwidth. The memory wall only
-  becomes the binding constraint once SIMD (v0.7) and threading (v0.5) remove that arithmetic
-  bottleneck — at which point fusion and cache behaviour become the levers that matter. The
-  roofline plot below is built to show exactly that transition as milestones land.
+What each milestone bought, read honestly:
 
-This is the kind of result the project exists to surface: *measure first, then optimize the
-thing that's actually binding.*
+- **v0.2 → v0.3/4 (`cpu_serial`): ~1.9×.** Removing per-amplitude bounds checks (via iterator
+  zips that lower to checked-free code — *no `unsafe` needed*) and the cache-friendly
+  nested-block walk. Squarely in the predicted 1.3–2× regime.
+- **v0.3/4 → v0.5 (`cpu_parallel`): ~2–3.4×** more, depending on size.
+
+### The kernel just became bandwidth-bound — and we can prove it
+
+Convert the v0.5 throughput to effective memory bandwidth: each update reads and writes a
+16-byte complex amplitude = 32 bytes of traffic.
+
+\\[
+\text{n=24:}\quad 3.97\ \text{Gelem/s} \times 32\ \text{B} \approx \mathbf{127\ GB/s} \approx \mathbf{85\%}\ \text{of the M3 Pro's} \sim 150\ \text{GB/s peak.}
+\\]
+
+At 256 MB (pure DRAM) the threaded kernel is running into the **memory wall**: ~85% of peak
+bandwidth, exactly the regime the [thesis](optimization.md) predicted. At n=20 (16 MB,
+partly L2-resident) it reports ~205 GB/s — *above* DRAM peak — because some traffic is served
+from cache.
+
+This is the inflection the project was built to surface. Earlier, the single-threaded scalar
+kernel was a flat ~1 Gelem/s — **compute-bound** on per-element work, not memory. Removing that
+work (v0.3) and parallelizing it (v0.5) has now pushed the DRAM-resident case to ~85% of the
+bandwidth roof. Per the **stop criterion** (≥ 70–80% of STREAM bandwidth), micro-optimizing
+*this* kernel further is noise — the next real win must change the bytes-moved equation, i.e.
+**gate fusion** (v0.8). The data wrote the roadmap.
 
 ## Roofline methodology
 

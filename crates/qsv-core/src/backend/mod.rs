@@ -16,6 +16,7 @@
 //! (`apply_1q`, `apply_diagonal`, …) are added with the optimized CPU backend.
 
 pub mod bitshift;
+pub mod cpu;
 pub mod reference;
 pub mod reshape;
 

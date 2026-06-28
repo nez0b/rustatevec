@@ -35,6 +35,8 @@ fn reshape_and_bitshift_match_oracle_on_random_circuits() {
         let oracle = run(&RefBackend, &c);
         let reshape = run(&ReshapeBackend, &c);
         let bitshift = run(&BitShiftBackend, &c);
+        let cpu_serial = run(&CpuBackend::serial(), &c);
+        let cpu_par = run(&CpuBackend::parallel(), &c);
 
         assert!(
             max_abs_diff(&oracle, &reshape) < TOL,
@@ -43,6 +45,14 @@ fn reshape_and_bitshift_match_oracle_on_random_circuits() {
         assert!(
             max_abs_diff(&oracle, &bitshift) < TOL,
             "BitShiftBackend diverged from oracle (seed {seed}, n {n})"
+        );
+        assert!(
+            max_abs_diff(&oracle, &cpu_serial) < TOL,
+            "CpuBackend::serial diverged from oracle (seed {seed}, n {n})"
+        );
+        assert!(
+            max_abs_diff(&oracle, &cpu_par) < TOL,
+            "CpuBackend::parallel diverged from oracle (seed {seed}, n {n})"
         );
         // Sanity: every backend preserves the norm.
         assert!((bitshift.norm_sqr() - 1.0).abs() < 1e-8);
@@ -57,6 +67,26 @@ fn bitshift_matches_oracle_at_ten_qubits() {
         let oracle = run(&RefBackend, &c);
         let bitshift = run(&BitShiftBackend, &c);
         assert!(max_abs_diff(&oracle, &bitshift) < TOL, "seed {seed}");
+    }
+}
+
+#[test]
+fn cpu_threaded_matches_oracle_above_threshold() {
+    // n = 14 (16384 amplitudes) is above CpuBackend's threading threshold, so this actually
+    // exercises the rayon path — including the multi-qubit (CX/CZ/SWAP/RZZ) parallel kernel.
+    for seed in 0..6u64 {
+        let c = random_circuit(14, 60, 4242 + seed);
+        let oracle = run(&RefBackend, &c);
+        let cpu_par = run(&CpuBackend::parallel(), &c);
+        let cpu_serial = run(&CpuBackend::serial(), &c);
+        assert!(
+            max_abs_diff(&oracle, &cpu_par) < TOL,
+            "threaded seed {seed}"
+        );
+        assert!(
+            max_abs_diff(&oracle, &cpu_serial) < TOL,
+            "serial seed {seed}"
+        );
     }
 }
 
@@ -81,8 +111,10 @@ fn qft_matches_oracle() {
         let oracle = run(&RefBackend, &c);
         let bitshift = run(&BitShiftBackend, &c);
         let reshape = run(&ReshapeBackend, &c);
+        let cpu = run(&CpuBackend::parallel(), &c);
         assert!(max_abs_diff(&oracle, &bitshift) < TOL, "qft bitshift n {n}");
         assert!(max_abs_diff(&oracle, &reshape) < TOL, "qft reshape n {n}");
+        assert!(max_abs_diff(&oracle, &cpu) < TOL, "qft cpu n {n}");
     }
 }
 
@@ -132,6 +164,7 @@ fn three_qubit_gate_matches_oracle() {
         let oracle = run(&RefBackend, &c);
         let bitshift = run(&BitShiftBackend, &c);
         let reshape = run(&ReshapeBackend, &c);
+        let cpu = run(&CpuBackend::serial(), &c);
         assert!(
             max_abs_diff(&oracle, &bitshift) < TOL,
             "ccx bitshift seed {seed}"
@@ -140,5 +173,6 @@ fn three_qubit_gate_matches_oracle() {
             max_abs_diff(&oracle, &reshape) < TOL,
             "ccx reshape seed {seed}"
         );
+        assert!(max_abs_diff(&oracle, &cpu) < TOL, "ccx cpu seed {seed}");
     }
 }

@@ -76,8 +76,13 @@ runnable and benchmarkable, and so every fast kernel can be validated against th
 | Backend | What it is | Use it for |
 | --- | --- | --- |
 | `RefBackend` | naive, independently-implemented oracle | correctness checks, small `N` |
-| `ReshapeBackend` | block-structured, out-of-place | the v0.1 milestone baseline |
-| `BitShiftBackend` | in-place bit-shift kernel | real simulation (default) |
+| `ReshapeBackend` | block-structured, out-of-place (v0.1) | the milestone baseline |
+| `BitShiftBackend` | in-place bit-shift kernel (v0.2) | the reference fast kernel |
+| `CpuBackend` | bounds-check-free + nested-block + rayon (v0.3–v0.5) | **real simulation (fastest)** |
+
+`CpuBackend::parallel()` (the `Default`) multithreads above a size threshold;
+`CpuBackend::serial()` forces single-threaded. Build with `--no-default-features` to drop the
+`parallel` feature (and the rayon dependency) entirely.
 
 ```rust
 // Identical circuit, different engine — the seam in action.

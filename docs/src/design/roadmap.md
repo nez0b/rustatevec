@@ -10,10 +10,10 @@ is in [How we optimize](optimization.md).
 | v0.0 | scaffold + naive `RefBackend` oracle + correctness tests | ✅ done |
 | v0.1 | `ReshapeBackend` — block / out-of-place apply | ✅ done |
 | v0.2 | `BitShiftBackend` — in-place bit-shift pair kernel | ✅ done |
-| v0.3 | unchecked indexing + stack gate matrices + zero hot-path alloc | ⬜ next |
-| v0.4 | high/low target-qubit dispatch | ⬜ |
-| v0.5 | multithreading (rayon) | ⬜ |
-| v0.6 | diagonal-gate fast path | ⬜ |
+| v0.3 | `CpuBackend` — bounds-check-free access + stack gate matrices | ✅ done |
+| v0.4 | `CpuBackend` — cache-friendly nested-block 1q kernel | ✅ done |
+| v0.5 | `CpuBackend::parallel()` — rayon threading | ✅ done |
+| v0.6 | diagonal-gate fast path | ⬜ next |
 | v0.7 | SIMD complex multiply (SoA + `wide`; nightly `std::simd`) | ⬜ |
 | v0.8 | **gate fusion** (cost model) | ⬜ |
 | v0.9 | cache-blocking + prefetch + non-temporal stores | ⬜ |
@@ -33,9 +33,11 @@ cross-checks the kernels rather than re-running the same logic.
 
 Current suite (grows with each milestone):
 
-- **200** reproducible random circuits (3–8 qubits, depth 20–60) — both optimized backends vs
-  oracle;
+- **200** reproducible random circuits (3–8 qubits, depth 20–60) — every optimized backend
+  (`Reshape`, `BitShift`, `CpuBackend` serial **and** parallel) vs oracle;
 - **15** random circuits at 10 qubits, depth 80 — `BitShiftBackend` vs oracle;
+- **6** random circuits at **14 qubits** (above the threading threshold) — `CpuBackend`'s
+  rayon path, including the multi-qubit parallel kernel, vs oracle;
 - **QFT** → uniform superposition (n = 1,2,3,5,8) and QFT vs oracle;
 - a 3-qubit **Toffoli** across several qubit orderings, exercising the general `apply_mq` path;
 - unit tests for the index arithmetic (pairs differ in exactly the target bit; block anchors

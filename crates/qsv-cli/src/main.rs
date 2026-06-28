@@ -16,8 +16,8 @@ fn main() {
         circuit.cx(0, q);
     }
 
-    // v0.2 in-place kernel — fast enough for GHZ on 20+ qubits.
-    let backend = BitShiftBackend;
+    // Fastest CPU backend (v0.3–v0.5: bounds-check-free + nested-block + threaded).
+    let backend = CpuBackend::default();
     let state = backend.execute(&circuit);
     let probs = backend.probabilities(&state);
 

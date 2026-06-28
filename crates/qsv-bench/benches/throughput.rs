@@ -28,6 +28,22 @@ fn single_gate(c: &mut Criterion) {
                 black_box(&state);
             });
         });
+        group.bench_with_input(BenchmarkId::new("cpu_serial", n), &n, |b, &n| {
+            let backend = CpuBackend::serial();
+            let mut state = StateVector::<f64>::basis(n, 0);
+            b.iter(|| {
+                backend.apply(&mut state, &h, std::slice::from_ref(&q));
+                black_box(&state);
+            });
+        });
+        group.bench_with_input(BenchmarkId::new("cpu_parallel", n), &n, |b, &n| {
+            let backend = CpuBackend::parallel();
+            let mut state = StateVector::<f64>::basis(n, 0);
+            b.iter(|| {
+                backend.apply(&mut state, &h, std::slice::from_ref(&q));
+                black_box(&state);
+            });
+        });
 
         // Milestone comparison only where the slow backends are still cheap enough.
         if n <= 16 {

@@ -30,3 +30,18 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace
+      - name: Build (no default features — dependency-free core)
+        run: cargo build -p qsv-core --no-default-features --features f64
+
+  docs:
+    name: build book
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.86.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Install mdBook
+        # mdBook 0.5 needs rustc 1.88; pin the 0.4 line for our 1.86 toolchain.
+        run: cargo install mdbook --version "^0.4" --locked
+      - name: Build the book
+        run: mdbook build docs

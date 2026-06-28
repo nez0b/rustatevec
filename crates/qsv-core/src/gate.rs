@@ -41,6 +41,13 @@ impl<R: Real> DenseGate<R> {
     pub fn at(&self, row: usize, col: usize) -> Cplx<R> {
         self.data[row * self.dim() + col]
     }
+
+    /// The row-major matrix as a flat slice (`row * dim + col`). For hot kernels that index
+    /// it with their own (provably in-bounds) arithmetic.
+    #[inline(always)]
+    pub fn row_major(&self) -> &[Cplx<R>] {
+        &self.data
+    }
 }
 
 /// Wrap a 1-qubit gate `u` as a 2-qubit controlled gate (`qs = [control, target]`).

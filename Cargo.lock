@@ -344,6 +344,9 @@ dependencies = [
 [[package]]
 name = "qsv-core"
 version = "0.0.0"
+dependencies = [
+ "rayon",
+]
 
 [[package]]
 name = "quote"

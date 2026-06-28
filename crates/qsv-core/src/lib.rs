@@ -42,6 +42,7 @@ pub mod state;
 pub mod prelude {
     //! Ergonomic glob import: `use qsv_core::prelude::*;`
     pub use crate::backend::bitshift::BitShiftBackend;
+    pub use crate::backend::cpu::CpuBackend;
     pub use crate::backend::reference::RefBackend;
     pub use crate::backend::reshape::ReshapeBackend;
     pub use crate::backend::Backend;
