@@ -145,6 +145,38 @@ fn ghz_is_correct_on_bitshift() {
     }
 }
 
+#[test]
+fn fusion_preserves_results() {
+    // The critical fusion guard: fusing must not change the computed state. Check across
+    // max_qubits settings, on random circuits and QFT, against the oracle on the UNFUSED
+    // circuit (so both the fuser and the multi-qubit kernel are cross-checked).
+    for &max_qubits in &[2u32, 3, 4, 5] {
+        let cfg = FusionConfig { max_qubits };
+        for seed in 0..40u64 {
+            let n = 4 + (seed % 5) as u32; // 4..=8 qubits
+            let c = random_circuit(n, 50, 70000 + seed);
+            let fused = fuse(&c, &cfg);
+            // Fusion should never increase the gate count.
+            assert!(fused.ops().len() <= c.ops().len());
+
+            let oracle = run(&RefBackend, &c);
+            let cpu_fused = run(&CpuBackend::parallel(), &fused);
+            assert!(
+                max_abs_diff(&oracle, &cpu_fused) < TOL,
+                "fusion changed result (max_qubits {max_qubits}, seed {seed}, n {n})"
+            );
+        }
+    }
+    // QFT too (controlled-phase heavy — the prime fusion target).
+    for &n in &[4u32, 6, 8] {
+        let c = qft(n);
+        let fused = fuse(&c, &FusionConfig::default());
+        let oracle = run(&RefBackend, &c);
+        let cpu_fused = run(&CpuBackend::parallel(), &fused);
+        assert!(max_abs_diff(&oracle, &cpu_fused) < TOL, "qft fusion n {n}");
+    }
+}
+
 /// Toffoli (CCX) as an 8×8 gate on `qs = [c0, c1, t]` (internal index = c0 + 2·c1 + 4·t):
 /// swaps the two states with both controls set (indices 3 and 7).
 fn ccx_gate() -> DenseGate<f64> {

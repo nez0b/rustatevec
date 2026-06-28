@@ -35,6 +35,7 @@ pub mod backend;
 pub mod circuit;
 pub mod circuits;
 pub mod complex;
+pub mod fusion;
 pub mod gate;
 pub mod real;
 pub mod state;
@@ -49,6 +50,7 @@ pub mod prelude {
     pub use crate::backend::Backend;
     pub use crate::circuit::Circuit;
     pub use crate::complex::Cplx;
+    pub use crate::fusion::{fuse, FusionConfig};
     pub use crate::gate::DenseGate;
     pub use crate::real::Real;
     pub use crate::state::StateVector;

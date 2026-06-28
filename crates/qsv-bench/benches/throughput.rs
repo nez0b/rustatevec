@@ -116,5 +116,25 @@ fn full_random(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, single_gate, full_qft, full_random);
+/// The headline: end-to-end QFT with gate fusion on vs off (same backend).
+fn fusion_speedup(c: &mut Criterion) {
+    let mut group = c.benchmark_group("fusion_qft");
+    group.sample_size(20);
+    for &n in &[10u32, 14, 18] {
+        let circ = qft(n);
+        let fused = fuse(&circ, &FusionConfig::default());
+        group.throughput(Throughput::Elements(circ.ops().len() as u64 * (1u64 << n)));
+        group.bench_with_input(BenchmarkId::new("unfused", n), &n, |b, _| {
+            let backend = CpuBackend::parallel();
+            b.iter(|| black_box(backend.execute(black_box(&circ))));
+        });
+        group.bench_with_input(BenchmarkId::new("fused", n), &n, |b, _| {
+            let backend = CpuBackend::parallel();
+            b.iter(|| black_box(backend.execute(black_box(&fused))));
+        });
+    }
+    group.finish();
+}
+
+criterion_group!(benches, single_gate, full_qft, full_random, fusion_speedup);
 criterion_main!(benches);
