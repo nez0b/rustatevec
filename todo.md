@@ -3,6 +3,44 @@
 Context and next steps for continuing on a different machine (HPC Intel CPU + CUDA GPU). Full
 design/benchmarks live in the book: <https://nez0b.github.io/rustatevec/> (or `mdbook serve docs`).
 
+## 0. Session update — 2026-06-28, on the Intel AVX-512 + L40S box (NEW)
+
+Ran on **2× Xeon Gold 6526Y** (32c/64t, 2 NUMA, AVX-512+BMI2+FMA, 503 GB) + **2× L40S** (Ada
+sm_89, 46 GB, CUDA 12.4). Vendor refs re-cloned under `_local/` (gitignored). Results in
+`bench/results/SUMMARY-xeon.md` (+ raw `.txt`).
+
+- **Fusion does NOT wash out at n=18 here** — QFT(18) fused 13.6 ms vs unfused 24.3 ms = **1.78×**
+  (2.73× at n=14). The M3 "wash" was a cache-capacity artifact. (v0.9 cache-blocked `apply_mq`
+  should widen it further, but it's no longer the blocker the handoff assumed.)
+- **f64x8 (nightly `std::simd`, AVX-512) implemented** behind the `nightly-simd` feature
+  (`backend/simd.rs`). At cache-resident **n=16 it beats auto-vec scalar 1.28× and `wide::f64x4`
+  1.33×** (3.99 vs 3.11 vs 3.00 G/s); past cache the win vanishes (bandwidth-bound) — textbook
+  roofline. The v0.7 "null" was partly the `f64x4::from([..])` array-gather (vs real `from_slice`).
+- **NUMA is the dominant CPU effect at large N.** Single H, n=24: pinning to one socket
+  (`taskset -c 0-15,32-47`, no numactl on box) = **2.29 G/s vs 0.94 G/s best unpinned, 0.33 G/s at
+  64 threads.** Default rayon pool (64) is *worse* than 16–32. Action items below.
+- **GPU backend STARTED and correctness-validated** (`crates/qsv-cuda`, cudarc 0.19 + NVRTC):
+  `CudaBackend` passes the differential suite vs the oracle on the L40S (`--features cuda`). First
+  naive kernel already sustains **~670 GB/s ≈ 78% of HBM peak**, 2.2–2.9× the (NUMA-limited) CPU.
+- **cuTile investigated and rejected for now** (`docs/src/research/cutile-investigation.md`):
+  real but needs CUDA 13.2+ (box is 12.4) and abstracts away the coalescing/SMEM control our
+  strided non-GEMM kernel needs. → backend built on cudarc. Toolchain: nightly installed for f64x8.
+
+**New build/test/run:**
+```bash
+cargo test -p qsv-cuda --features cuda                              # GPU differential suite (needs L40S)
+cargo run -p qsv-cuda --features cuda --release --example throughput  # GPU vs CPU throughput
+cargo +nightly test --features qsv-core/nightly-simd               # AVX-512 f64x8 path
+cargo run -p qsv-cuda --features cuda --release --example throughput
+```
+Workspace stays green without CUDA (`qsv-cuda` compiles empty under default features).
+
+**Next (carried forward):** GPU §4.4 optimizations — `execute`-batching / CUDA graphs (each `apply`
+still `synchronize()`s), shared-mem-staged `mq` matrix, on-device probability *reduction* (currently
+`k_abs2` + full dtoh). CPU — NUMA-aware first-touch / interleaved alloc + cap rayon to one socket
+(revisit `PARALLEL_MIN_PAIRS`); roofline via STREAM/`perf` IMC; native-vs-SSE2 AVX-uplift number;
+`perf record` kernel attribution. Then cross-sim comparison (QuEST/Aer/qsim, cuStateVec for GPU).
+
 ## 1. Where things stand (v0.0 – v0.8, all on `main`)
 
 A Cargo workspace: `qsv-core` (library), `qsv-cli` (`qsv` runner), `qsv-bench` (criterion +

@@ -18,14 +18,26 @@ The statevector lives in HBM (the bottleneck); achieved bandwidth is ~60–80% o
 **same bandwidth-bound story as the CPU**. cuda-quantum's `nvq++` lowers circuits to
 `custatevecApplyMatrix` calls.
 
-## cuTile / cuTile-rs — ⚠️ unverified
+## cuTile / cuTile-rs — ✅ verified (2026-06)
 
-Landscape research returned confident but **post-knowledge-cutoff** claims about an NVlabs
-`cutile-rs` (a Rust binding for NVIDIA's tile-based GPU model), with a star count, an arXiv
-id, and benchmark numbers. **Treat these as a lead to verify, not fact.** Because qsv is
-CPU-first with a pluggable `Backend` seam, none of this is on the critical path; we will
-independently confirm the repository, maturity, hardware/driver requirements, and suitability
-for a memory-bound (not GEMM-shaped) kernel before ever committing to cuTile.
+cuTile is **real and shipping**: `NVlabs/cutile-rs` (crate `cutile`, Rust 1.89+) and
+`NVIDIA/cutile-python`, with the paper *Fearless Concurrency on the GPU*
+([arXiv 2606.15991](https://arxiv.org/abs/2606.15991)). Both clones are under `_local/`. The full
+memory-architecture study and the build-vs-buy decision live in the
+[cuTile memory architecture](cutile-investigation.md) note; the essentials:
+
+- **Requirements:** GPU `sm_80`+ (Ada `sm_89` ✅), **CUDA 13.2+ (13.3 recommended)**, driver
+  **r580+**, Linux. **Our box is CUDA 12.4 / driver 550 → cuTile cannot run here without a
+  toolkit + driver upgrade** (sysadmin-level). cuTile is early-stage ("expect API breakage").
+- **Memory model:** programmer picks *tile* shapes; the compiler owns coalescing, shared-memory
+  staging, TMA pipelining, and tensor-core lowering. Tiles live in registers; tensors live in HBM;
+  load/store moves between them. There is **no native complex type**, and **strided access** is the
+  pattern cuTile's own docs flag as most likely to lose bandwidth — with no manual remedy.
+- **Decision:** for our memory-bound, strided, complex, non-GEMM gate kernel, the performance
+  levers (coalescing, `__shared__` staging, `__shfl` pair exchange, vectorized complex loads) are
+  exactly what cuTile abstracts away. → **`CudaBackend` is built on `cudarc` + NVRTC** (hand-written
+  CUDA C, full memory control, runs on CUDA 12.4 today). cuTile stays as a future validation
+  reference and for the contiguous/low-target-qubit cases.
 
 ## Rust quantum-sim ecosystem — the gap
 

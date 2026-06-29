@@ -1,0 +1,19 @@
+[package]
+name = "qsv-cuda"
+version = "0.0.0"
+description = "GPU (CUDA) backend for the qsv statevector simulator — cudarc + NVRTC kernels"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[features]
+# Off by default so `cargo build --workspace` stays green on machines without a CUDA toolkit.
+# Enable with `--features cuda` (requires nvcc/libcuda) to build the real GPU backend + tests.
+default = []
+cuda = ["dep:cudarc"]
+
+[dependencies]
+qsv-core = { path = "../qsv-core" }
+# Runtime kernel compilation (NVRTC) + driver API; dynamic-loading means no link-time CUDA.
+cudarc = { version = "0.19", optional = true, features = ["cuda-12040", "driver", "nvrtc"] }

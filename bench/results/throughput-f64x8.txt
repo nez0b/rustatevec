@@ -1,0 +1,402 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.46
+   Compiling crossbeam-utils v0.8.21
+   Compiling serde_core v1.0.228
+   Compiling either v1.16.0
+   Compiling zerocopy v0.8.52
+   Compiling rayon-core v1.13.0
+   Compiling autocfg v1.5.1
+   Compiling serde v1.0.228
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.150
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling bytemuck v1.25.0
+   Compiling anstyle v1.0.14
+   Compiling ciborium-io v0.2.2
+   Compiling itoa v1.0.18
+   Compiling regex-syntax v0.8.11
+   Compiling plotters-backend v0.3.7
+   Compiling clap_lex v1.1.0
+   Compiling memchr v2.8.2
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling oorandom v11.1.5
+   Compiling anes v0.1.6
+   Compiling once_cell v1.21.4
+   Compiling safe_arch v0.7.4
+   Compiling walkdir v2.5.0
+   Compiling itertools v0.10.5
+   Compiling clap_builder v4.6.0
+   Compiling plotters-svg v0.3.7
+   Compiling num-traits v0.2.19
+   Compiling regex-automata v0.4.14
+   Compiling wide v0.7.33
+   Compiling crossbeam-epoch v0.9.18
+   Compiling crossbeam-deque v0.8.6
+   Compiling criterion-plot v0.5.0
+   Compiling syn v2.0.118
+   Compiling is-terminal v0.4.17
+   Compiling plotters v0.3.7
+   Compiling clap v4.6.1
+   Compiling rayon v1.12.0
+   Compiling regex v1.12.4
+   Compiling qsv-core v0.0.0 (/data/pjw/rustatevec/crates/qsv-core)
+   Compiling zerocopy-derive v0.8.52
+   Compiling serde_derive v1.0.228
+   Compiling qsv-bench v0.0.0 (/data/pjw/rustatevec/crates/qsv-bench)
+   Compiling tinytemplate v1.2.1
+   Compiling half v2.7.1
+   Compiling ciborium-ll v0.2.2
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+    Finished `bench` profile [optimized + debuginfo] target(s) in 32.27s
+     Running benches/throughput.rs (target/release/deps/throughput-018eaab77feec4c5)
+Gnuplot not found, using plotters backend
+Benchmarking single_h_gate/bitshift/12
+Benchmarking single_h_gate/bitshift/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/bitshift/12: Collecting 100 samples in estimated 5.0224 s (954k iterations)
+Benchmarking single_h_gate/bitshift/12: Analyzing
+single_h_gate/bitshift/12
+                        time:   [5.2618 µs 5.2622 µs 5.2628 µs]
+                        thrpt:  [778.30 Melem/s 778.37 Melem/s 778.44 Melem/s]
+                 change:
+                        time:   [+0.2787% +0.3197% +0.3580%] (p = 0.00 < 0.05)
+                        thrpt:  [-0.3567% -0.3186% -0.2779%]
+                        Change within noise threshold.
+Found 12 outliers among 100 measurements (12.00%)
+  3 (3.00%) low severe
+  2 (2.00%) low mild
+  6 (6.00%) high mild
+  1 (1.00%) high severe
+Benchmarking single_h_gate/cpu_serial/12
+Benchmarking single_h_gate/cpu_serial/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_serial/12: Collecting 100 samples in estimated 5.0091 s (2.8M iterations)
+Benchmarking single_h_gate/cpu_serial/12: Analyzing
+single_h_gate/cpu_serial/12
+                        time:   [1.8192 µs 1.8196 µs 1.8200 µs]
+                        thrpt:  [2.2505 Gelem/s 2.2510 Gelem/s 2.2516 Gelem/s]
+                 change:
+                        time:   [+29.084% +29.163% +29.236%] (p = 0.00 < 0.05)
+                        thrpt:  [-22.622% -22.579% -22.531%]
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+Benchmarking single_h_gate/cpu_parallel/12
+Benchmarking single_h_gate/cpu_parallel/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_parallel/12: Collecting 100 samples in estimated 5.0091 s (2.8M iterations)
+Benchmarking single_h_gate/cpu_parallel/12: Analyzing
+single_h_gate/cpu_parallel/12
+                        time:   [1.8197 µs 1.8201 µs 1.8205 µs]
+                        thrpt:  [2.2499 Gelem/s 2.2504 Gelem/s 2.2509 Gelem/s]
+                 change:
+                        time:   [+29.202% +29.282% +29.405%] (p = 0.00 < 0.05)
+                        thrpt:  [-22.723% -22.650% -22.602%]
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking single_h_gate/simd_serial/12
+Benchmarking single_h_gate/simd_serial/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_serial/12: Collecting 100 samples in estimated 5.0050 s (3.6M iterations)
+Benchmarking single_h_gate/simd_serial/12: Analyzing
+single_h_gate/simd_serial/12
+                        time:   [1.3807 µs 1.3812 µs 1.3818 µs]
+                        thrpt:  [2.9643 Gelem/s 2.9655 Gelem/s 2.9666 Gelem/s]
+                 change:
+                        time:   [-5.5299% -5.4832% -5.4386%] (p = 0.00 < 0.05)
+                        thrpt:  [+5.7514% +5.8013% +5.8536%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+Benchmarking single_h_gate/simd_parallel/12
+Benchmarking single_h_gate/simd_parallel/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_parallel/12: Collecting 100 samples in estimated 5.0030 s (3.6M iterations)
+Benchmarking single_h_gate/simd_parallel/12: Analyzing
+single_h_gate/simd_parallel/12
+                        time:   [1.3818 µs 1.3824 µs 1.3831 µs]
+                        thrpt:  [2.9614 Gelem/s 2.9629 Gelem/s 2.9643 Gelem/s]
+                 change:
+                        time:   [-5.6014% -5.5485% -5.4897%] (p = 0.00 < 0.05)
+                        thrpt:  [+5.8085% +5.8744% +5.9337%]
+                        Performance has improved.
+Found 6 outliers among 100 measurements (6.00%)
+  2 (2.00%) low mild
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking single_h_gate/reshape/12
+Benchmarking single_h_gate/reshape/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/reshape/12: Collecting 100 samples in estimated 5.0271 s (621k iterations)
+Benchmarking single_h_gate/reshape/12: Analyzing
+single_h_gate/reshape/12
+                        time:   [8.1225 µs 8.1253 µs 8.1285 µs]
+                        thrpt:  [503.91 Melem/s 504.11 Melem/s 504.28 Melem/s]
+                 change:
+                        time:   [+14.481% +14.563% +14.652%] (p = 0.00 < 0.05)
+                        thrpt:  [-12.780% -12.712% -12.649%]
+                        Performance has regressed.
+Found 15 outliers among 100 measurements (15.00%)
+  2 (2.00%) low severe
+  3 (3.00%) low mild
+  6 (6.00%) high mild
+  4 (4.00%) high severe
+Benchmarking single_h_gate/oracle/12
+Benchmarking single_h_gate/oracle/12: Warming up for 3.0000 s
+Benchmarking single_h_gate/oracle/12: Collecting 100 samples in estimated 5.0480 s (313k iterations)
+Benchmarking single_h_gate/oracle/12: Analyzing
+single_h_gate/oracle/12 time:   [16.089 µs 16.091 µs 16.092 µs]
+                        thrpt:  [254.54 Melem/s 254.56 Melem/s 254.58 Melem/s]
+                 change:
+                        time:   [+14.651% +14.694% +14.748%] (p = 0.00 < 0.05)
+                        thrpt:  [-12.853% -12.812% -12.779%]
+                        Performance has regressed.
+Found 11 outliers among 100 measurements (11.00%)
+  1 (1.00%) low severe
+  3 (3.00%) low mild
+  3 (3.00%) high mild
+  4 (4.00%) high severe
+Benchmarking single_h_gate/bitshift/16
+Benchmarking single_h_gate/bitshift/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/bitshift/16: Collecting 100 samples in estimated 5.0786 s (61k iterations)
+Benchmarking single_h_gate/bitshift/16: Analyzing
+single_h_gate/bitshift/16
+                        time:   [83.693 µs 83.715 µs 83.746 µs]
+                        thrpt:  [782.55 Melem/s 782.85 Melem/s 783.05 Melem/s]
+                 change:
+                        time:   [-0.2232% -0.1596% -0.0849%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.0850% +0.1599% +0.2237%]
+                        Change within noise threshold.
+Found 7 outliers among 100 measurements (7.00%)
+  2 (2.00%) low severe
+  1 (1.00%) high mild
+  4 (4.00%) high severe
+Benchmarking single_h_gate/cpu_serial/16
+Benchmarking single_h_gate/cpu_serial/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_serial/16: Collecting 100 samples in estimated 5.1057 s (242k iterations)
+Benchmarking single_h_gate/cpu_serial/16: Analyzing
+single_h_gate/cpu_serial/16
+                        time:   [21.066 µs 21.072 µs 21.078 µs]
+                        thrpt:  [3.1093 Gelem/s 3.1101 Gelem/s 3.1110 Gelem/s]
+                 change:
+                        time:   [-0.5921% -0.5156% -0.4456%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.4476% +0.5183% +0.5956%]
+                        Change within noise threshold.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) low mild
+  1 (1.00%) high mild
+Benchmarking single_h_gate/cpu_parallel/16
+Benchmarking single_h_gate/cpu_parallel/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_parallel/16: Collecting 100 samples in estimated 5.2856 s (71k iterations)
+Benchmarking single_h_gate/cpu_parallel/16: Analyzing
+single_h_gate/cpu_parallel/16
+                        time:   [73.781 µs 74.202 µs 74.654 µs]
+                        thrpt:  [877.86 Melem/s 883.21 Melem/s 888.25 Melem/s]
+                 change:
+                        time:   [+6.4455% +7.5478% +8.5828%] (p = 0.00 < 0.05)
+                        thrpt:  [-7.9044% -7.0181% -6.0552%]
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  4 (4.00%) high mild
+Benchmarking single_h_gate/simd_serial/16
+Benchmarking single_h_gate/simd_serial/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_serial/16: Collecting 100 samples in estimated 5.0680 s (308k iterations)
+Benchmarking single_h_gate/simd_serial/16: Analyzing
+single_h_gate/simd_serial/16
+                        time:   [16.440 µs 16.446 µs 16.452 µs]
+                        thrpt:  [3.9836 Gelem/s 3.9850 Gelem/s 3.9863 Gelem/s]
+                 change:
+                        time:   [-24.739% -24.678% -24.607%] (p = 0.00 < 0.05)
+                        thrpt:  [+32.639% +32.763% +32.870%]
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking single_h_gate/simd_parallel/16
+Benchmarking single_h_gate/simd_parallel/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_parallel/16: Collecting 100 samples in estimated 5.2656 s (71k iterations)
+Benchmarking single_h_gate/simd_parallel/16: Analyzing
+single_h_gate/simd_parallel/16
+                        time:   [73.472 µs 73.932 µs 74.371 µs]
+                        thrpt:  [881.21 Melem/s 886.43 Melem/s 891.99 Melem/s]
+                 change:
+                        time:   [+8.0494% +8.9854% +10.046%] (p = 0.00 < 0.05)
+                        thrpt:  [-9.1293% -8.2446% -7.4498%]
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking single_h_gate/reshape/16
+Benchmarking single_h_gate/reshape/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/reshape/16: Collecting 100 samples in estimated 5.2996 s (40k iterations)
+Benchmarking single_h_gate/reshape/16: Analyzing
+single_h_gate/reshape/16
+                        time:   [131.13 µs 131.15 µs 131.17 µs]
+                        thrpt:  [499.63 Melem/s 499.71 Melem/s 499.79 Melem/s]
+                 change:
+                        time:   [+4.9364% +4.9779% +5.0199%] (p = 0.00 < 0.05)
+                        thrpt:  [-4.7799% -4.7418% -4.7042%]
+                        Performance has regressed.
+Found 14 outliers among 100 measurements (14.00%)
+  2 (2.00%) low severe
+  3 (3.00%) low mild
+  3 (3.00%) high mild
+  6 (6.00%) high severe
+Benchmarking single_h_gate/oracle/16
+Benchmarking single_h_gate/oracle/16: Warming up for 3.0000 s
+Benchmarking single_h_gate/oracle/16: Collecting 100 samples in estimated 5.3609 s (20k iterations)
+Benchmarking single_h_gate/oracle/16: Analyzing
+single_h_gate/oracle/16 time:   [265.78 µs 266.36 µs 267.11 µs]
+                        thrpt:  [245.35 Melem/s 246.05 Melem/s 246.58 Melem/s]
+                 change:
+                        time:   [+9.9079% +10.151% +10.470%] (p = 0.00 < 0.05)
+                        thrpt:  [-9.4774% -9.2153% -9.0147%]
+                        Performance has regressed.
+Found 29 outliers among 100 measurements (29.00%)
+  2 (2.00%) low severe
+  21 (21.00%) low mild
+  2 (2.00%) high mild
+  4 (4.00%) high severe
+Benchmarking single_h_gate/bitshift/20
+Benchmarking single_h_gate/bitshift/20: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 7.0s, enable flat sampling, or reduce sample count to 50.
+Benchmarking single_h_gate/bitshift/20: Collecting 100 samples in estimated 7.0232 s (5050 iterations)
+Benchmarking single_h_gate/bitshift/20: Analyzing
+single_h_gate/bitshift/20
+                        time:   [1.4466 ms 1.4517 ms 1.4582 ms]
+                        thrpt:  [719.10 Melem/s 722.32 Melem/s 724.83 Melem/s]
+                 change:
+                        time:   [-8.9154% +1.7199% +13.100%] (p = 0.78 > 0.05)
+                        thrpt:  [-11.583% -1.6908% +9.7881%]
+                        No change in performance detected.
+Found 13 outliers among 100 measurements (13.00%)
+  5 (5.00%) high mild
+  8 (8.00%) high severe
+Benchmarking single_h_gate/cpu_serial/20
+Benchmarking single_h_gate/cpu_serial/20: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_serial/20: Collecting 100 samples in estimated 5.5220 s (10k iterations)
+Benchmarking single_h_gate/cpu_serial/20: Analyzing
+single_h_gate/cpu_serial/20
+                        time:   [573.77 µs 576.43 µs 579.82 µs]
+                        thrpt:  [1.8085 Gelem/s 1.8191 Gelem/s 1.8275 Gelem/s]
+                 change:
+                        time:   [-16.192% -3.7949% +10.696%] (p = 0.62 > 0.05)
+                        thrpt:  [-9.6626% +3.9446% +19.321%]
+                        No change in performance detected.
+Found 12 outliers among 100 measurements (12.00%)
+  4 (4.00%) high mild
+  8 (8.00%) high severe
+Benchmarking single_h_gate/cpu_parallel/20
+Benchmarking single_h_gate/cpu_parallel/20: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_parallel/20: Collecting 100 samples in estimated 5.6719 s (35k iterations)
+Benchmarking single_h_gate/cpu_parallel/20: Analyzing
+single_h_gate/cpu_parallel/20
+                        time:   [183.92 µs 186.53 µs 189.77 µs]
+                        thrpt:  [5.5255 Gelem/s 5.6216 Gelem/s 5.7013 Gelem/s]
+                 change:
+                        time:   [-20.693% +4.7945% +36.140%] (p = 0.76 > 0.05)
+                        thrpt:  [-26.546% -4.5751% +26.093%]
+                        No change in performance detected.
+Found 13 outliers among 100 measurements (13.00%)
+  3 (3.00%) high mild
+  10 (10.00%) high severe
+Benchmarking single_h_gate/simd_serial/20
+Benchmarking single_h_gate/simd_serial/20: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_serial/20: Collecting 100 samples in estimated 5.2303 s (10k iterations)
+Benchmarking single_h_gate/simd_serial/20: Analyzing
+single_h_gate/simd_serial/20
+                        time:   [544.32 µs 546.69 µs 549.77 µs]
+                        thrpt:  [1.9073 Gelem/s 1.9180 Gelem/s 1.9264 Gelem/s]
+                 change:
+                        time:   [-14.182% -2.6996% +10.069%] (p = 0.69 > 0.05)
+                        thrpt:  [-9.1482% +2.7745% +16.525%]
+                        No change in performance detected.
+Found 13 outliers among 100 measurements (13.00%)
+  4 (4.00%) high mild
+  9 (9.00%) high severe
+Benchmarking single_h_gate/simd_parallel/20
+Benchmarking single_h_gate/simd_parallel/20: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_parallel/20: Collecting 100 samples in estimated 5.7256 s (35k iterations)
+Benchmarking single_h_gate/simd_parallel/20: Analyzing
+single_h_gate/simd_parallel/20
+                        time:   [186.64 µs 189.22 µs 192.50 µs]
+                        thrpt:  [5.4473 Gelem/s 5.5416 Gelem/s 5.6182 Gelem/s]
+                 change:
+                        time:   [-18.922% +5.0650% +36.174%] (p = 0.74 > 0.05)
+                        thrpt:  [-26.564% -4.8209% +23.339%]
+                        No change in performance detected.
+Found 15 outliers among 100 measurements (15.00%)
+  7 (7.00%) high mild
+  8 (8.00%) high severe
+Benchmarking single_h_gate/bitshift/24
+Benchmarking single_h_gate/bitshift/24: Warming up for 3.0000 s
+Benchmarking single_h_gate/bitshift/24: Collecting 100 samples in estimated 6.0381 s (200 iterations)
+Benchmarking single_h_gate/bitshift/24: Analyzing
+single_h_gate/bitshift/24
+                        time:   [79.537 ms 79.876 ms 80.308 ms]
+                        thrpt:  [208.91 Melem/s 210.04 Melem/s 210.94 Melem/s]
+                 change:
+                        time:   [-0.6615% -0.1739% +0.4271%] (p = 0.55 > 0.05)
+                        thrpt:  [-0.4253% +0.1742% +0.6659%]
+                        No change in performance detected.
+Found 14 outliers among 100 measurements (14.00%)
+  1 (1.00%) low severe
+  8 (8.00%) low mild
+  2 (2.00%) high mild
+  3 (3.00%) high severe
+Benchmarking single_h_gate/cpu_serial/24
+Benchmarking single_h_gate/cpu_serial/24: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_serial/24: Collecting 100 samples in estimated 6.2425 s (300 iterations)
+Benchmarking single_h_gate/cpu_serial/24: Analyzing
+single_h_gate/cpu_serial/24
+                        time:   [53.361 ms 53.685 ms 54.101 ms]
+                        thrpt:  [310.11 Melem/s 312.51 Melem/s 314.41 Melem/s]
+                 change:
+                        time:   [+3.8852% +4.5433% +5.4093%] (p = 0.00 < 0.05)
+                        thrpt:  [-5.1317% -4.3458% -3.7399%]
+                        Performance has regressed.
+Found 7 outliers among 100 measurements (7.00%)
+  2 (2.00%) low mild
+  1 (1.00%) high mild
+  4 (4.00%) high severe
+Benchmarking single_h_gate/cpu_parallel/24
+Benchmarking single_h_gate/cpu_parallel/24: Warming up for 3.0000 s
+Benchmarking single_h_gate/cpu_parallel/24: Collecting 100 samples in estimated 5.2260 s (1600 iterations)
+Benchmarking single_h_gate/cpu_parallel/24: Analyzing
+single_h_gate/cpu_parallel/24
+                        time:   [10.944 ms 10.981 ms 11.020 ms]
+                        thrpt:  [1.5225 Gelem/s 1.5279 Gelem/s 1.5330 Gelem/s]
+                 change:
+                        time:   [-0.4604% +0.0634% +0.5796%] (p = 0.81 > 0.05)
+                        thrpt:  [-0.5763% -0.0633% +0.4625%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking single_h_gate/simd_serial/24
+Benchmarking single_h_gate/simd_serial/24: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_serial/24: Collecting 100 samples in estimated 6.1335 s (300 iterations)
+Benchmarking single_h_gate/simd_serial/24: Analyzing
+single_h_gate/simd_serial/24
+                        time:   [52.392 ms 52.579 ms 52.884 ms]
+                        thrpt:  [317.24 Melem/s 319.08 Melem/s 320.23 Melem/s]
+                 change:
+                        time:   [-27.751% -27.079% -26.407%] (p = 0.00 < 0.05)
+                        thrpt:  [+35.882% +37.134% +38.411%]
+                        Performance has improved.
+Found 5 outliers among 100 measurements (5.00%)
+  2 (2.00%) low mild
+  3 (3.00%) high severe
+Benchmarking single_h_gate/simd_parallel/24
+Benchmarking single_h_gate/simd_parallel/24: Warming up for 3.0000 s
+Benchmarking single_h_gate/simd_parallel/24: Collecting 100 samples in estimated 5.2314 s (1600 iterations)
+Benchmarking single_h_gate/simd_parallel/24: Analyzing
+single_h_gate/simd_parallel/24
+                        time:   [10.927 ms 10.962 ms 10.998 ms]
+                        thrpt:  [1.5255 Gelem/s 1.5305 Gelem/s 1.5354 Gelem/s]
+                 change:
+                        time:   [-0.7127% -0.2075% +0.2796%] (p = 0.41 > 0.05)
+                        thrpt:  [-0.2788% +0.2079% +0.7178%]
+                        No change in performance detected.
+

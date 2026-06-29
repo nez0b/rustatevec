@@ -1,0 +1,9 @@
+thread sweep: single H gate, cpu_parallel n=24 (16M amps, 256MB, RAM-bound); GB/s = Gelem/s*32
+RAYON_NUM_THREADS=1 (all 64 logical)  -> 139.75 Melem/s
+RAYON_NUM_THREADS=2 (all 64 logical)  -> 79.656 Melem/s
+RAYON_NUM_THREADS=4 (all 64 logical)  -> 226.59 Melem/s
+RAYON_NUM_THREADS=8 (all 64 logical)  -> 637.01 Melem/s
+RAYON_NUM_THREADS=16 (all 64 logical)  -> 944.76 Melem/s
+RAYON_NUM_THREADS=32 (all 64 logical)  -> 679.58 Melem/s
+RAYON_NUM_THREADS=64 (all 64 logical)  -> 333.25 Melem/s
+socket0 pinned (taskset, 32 thr, 1 NUMA) -> 2.2873 Gelem/s

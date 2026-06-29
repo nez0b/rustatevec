@@ -17,8 +17,9 @@ f32 = []
 parallel = ["dep:rayon"]
 # Portable-SIMD kernels via the stable `wide` crate (SimdBackend). On by default.
 simd = ["dep:wide"]
-# Swaps the SIMD complex-multiply impl to `std::simd` (requires nightly). Off by default.
-nightly-simd = []
+# Swaps the SIMD complex-multiply impl to `std::simd::f64x8` (512-bit, AVX-512). Requires a
+# nightly toolchain (`portable_simd`). Implies `simd`. Off by default.
+nightly-simd = ["simd"]
 
 [dependencies]
 rayon = { version = "1", optional = true }

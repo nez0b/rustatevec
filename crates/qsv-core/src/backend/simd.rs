@@ -57,7 +57,12 @@ impl Default for SimdBackend {
 const PARALLEL_MIN_PAIRS: usize = 1 << 12;
 
 /// Apply the 2×2 gate to one block: SIMD over the contiguous halves, scalar remainder.
-#[cfg(feature = "simd")]
+///
+/// Two implementations share this signature, picked by feature:
+/// - **`nightly-simd`**: `std::simd::f64x8` (512-bit, AVX-512) with real vector loads
+///   (`Simd::from_slice`). This is the wide path the Intel box is built for.
+/// - default `simd`: the stable `wide::f64x4` (256-bit) baseline (v0.7).
+#[cfg(all(feature = "simd", not(feature = "nightly-simd")))]
 fn simd_block(rb: &mut [f64], ib: &mut [f64], half: usize, g: [Cplx<f64>; 4]) {
     use wide::f64x4;
 
@@ -97,6 +102,74 @@ fn simd_block(rb: &mut [f64], ib: &mut [f64], half: usize, g: [Cplx<f64>; 4]) {
     }
 
     // Scalar tail (length < 4, e.g. low-q blocks).
+    let (rl, il, rh, ih) = (
+        rl.into_remainder(),
+        il.into_remainder(),
+        rh.into_remainder(),
+        ih.into_remainder(),
+    );
+    for (((r0, i0), r1), i1) in rl
+        .iter_mut()
+        .zip(il.iter_mut())
+        .zip(rh.iter_mut())
+        .zip(ih.iter_mut())
+    {
+        let (x0r, x0i, x1r, x1i) = (*r0, *i0, *r1, *i1);
+        *r0 = g[0].re * x0r - g[0].im * x0i + g[1].re * x1r - g[1].im * x1i;
+        *i0 = g[0].re * x0i + g[0].im * x0r + g[1].re * x1i + g[1].im * x1r;
+        *r1 = g[2].re * x0r - g[2].im * x0i + g[3].re * x1r - g[3].im * x1i;
+        *i1 = g[2].re * x0i + g[2].im * x0r + g[3].re * x1i + g[3].im * x1r;
+    }
+}
+
+/// `nightly-simd` — the AVX-512 `std::simd::f64x8` kernel (512-bit lanes, real vector loads).
+///
+/// Identical math to the `wide` version but 8-wide and using `Simd::from_slice` (a true aligned
+/// vector load) instead of the per-element array gather, so it competes fairly with LLVM's
+/// auto-vectorized scalar kernel. SoA layout means the complex multiply is pure broadcast-FMA
+/// with no lane shuffles.
+#[cfg(feature = "nightly-simd")]
+fn simd_block(rb: &mut [f64], ib: &mut [f64], half: usize, g: [Cplx<f64>; 4]) {
+    use std::simd::Simd;
+    type V = Simd<f64, 8>;
+    const L: usize = 8;
+
+    let (re_lo, re_hi) = rb.split_at_mut(half);
+    let (im_lo, im_hi) = ib.split_at_mut(half);
+
+    let (g00r, g00i) = (V::splat(g[0].re), V::splat(g[0].im));
+    let (g01r, g01i) = (V::splat(g[1].re), V::splat(g[1].im));
+    let (g10r, g10i) = (V::splat(g[2].re), V::splat(g[2].im));
+    let (g11r, g11i) = (V::splat(g[3].re), V::splat(g[3].im));
+
+    let mut rl = re_lo.chunks_exact_mut(L);
+    let mut il = im_lo.chunks_exact_mut(L);
+    let mut rh = re_hi.chunks_exact_mut(L);
+    let mut ih = im_hi.chunks_exact_mut(L);
+
+    for (((rlc, ilc), rhc), ihc) in rl
+        .by_ref()
+        .zip(il.by_ref())
+        .zip(rh.by_ref())
+        .zip(ih.by_ref())
+    {
+        let x0r = V::from_slice(rlc);
+        let x0i = V::from_slice(ilc);
+        let x1r = V::from_slice(rhc);
+        let x1i = V::from_slice(ihc);
+
+        let y0r = g00r * x0r - g00i * x0i + g01r * x1r - g01i * x1i;
+        let y0i = g00r * x0i + g00i * x0r + g01r * x1i + g01i * x1r;
+        let y1r = g10r * x0r - g10i * x0i + g11r * x1r - g11i * x1i;
+        let y1i = g10r * x0i + g10i * x0r + g11r * x1i + g11i * x1r;
+
+        rlc.copy_from_slice(y0r.as_array());
+        ilc.copy_from_slice(y0i.as_array());
+        rhc.copy_from_slice(y1r.as_array());
+        ihc.copy_from_slice(y1i.as_array());
+    }
+
+    // Scalar tail (length < 8, e.g. low-q blocks).
     let (rl, il, rh, ih) = (
         rl.into_remainder(),
         il.into_remainder(),
