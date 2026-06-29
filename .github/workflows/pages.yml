@@ -21,10 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.86.0
+      # `stable` (not the 1.86 workspace pin) so the mdbook-katex preprocessor compiles.
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install mdBook
-        run: cargo install mdbook --version "^0.4" --locked
+      - name: Install mdBook + KaTeX preprocessor
+        run: |
+          cargo install mdbook --version "^0.4" --locked
+          cargo install mdbook-katex --locked
       - name: Build the book
         run: mdbook build docs
       - uses: actions/configure-pages@v5
