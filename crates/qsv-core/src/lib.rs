@@ -38,6 +38,7 @@ pub mod complex;
 pub mod fusion;
 pub mod gate;
 pub mod real;
+pub mod sample;
 pub mod state;
 
 pub mod prelude {

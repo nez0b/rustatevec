@@ -22,6 +22,7 @@ pub mod reshape;
 pub mod simd;
 
 use crate::circuit::Circuit;
+use crate::circuits::SplitMix64;
 use crate::complex::Cplx;
 use crate::gate::DenseGate;
 use crate::real::Real;
@@ -45,6 +46,17 @@ pub trait Backend<R: Real> {
 
     /// Measurement probabilities `|ψ_i|²` over the full computational basis.
     fn probabilities(&self, state: &Self::State) -> Vec<R>;
+
+    /// Draw `shots` measurement outcomes (basis-state indices) `∝ |ψ_i|²`, via an `O(1)`/shot
+    /// alias table. A device backend overrides this to sample on-device (no full copy back).
+    fn sample(&self, state: &Self::State, shots: usize, rng: &mut SplitMix64) -> Vec<usize> {
+        crate::sample::alias_sample(&self.probabilities(state), shots, rng)
+    }
+
+    /// Expectation `⟨ψ| Z_mask |ψ⟩` of the Pauli-Z product on the qubits set in `mask`.
+    fn expectation_z(&self, state: &Self::State, mask: usize) -> R {
+        crate::sample::expectation_z(&self.probabilities(state), mask)
+    }
 
     /// Copy the full state to host (the only device→host crossing).
     fn download(&self, state: &Self::State) -> StateVector<R>;
