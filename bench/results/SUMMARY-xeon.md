@@ -27,6 +27,22 @@ actually neutral/negative (328M vs unfused 391M) because at cache-resident N the
 kernels beat the heavier fused `apply_mq`. Fusion's real win is the **bandwidth-bound regime:
 1.70× at n=18** (3.00 vs 1.77 G/s). This is the physically-correct story.
 
+## UPDATE (v0.10) — BMI2 (PEXT/PDEP) index generation: the bandwidth-bound anchor
+
+`bmi2` feature, runtime-detected, on `insert_zero_bits` (→ `PDEP(index, !mask)`) plus PEXT/PDEP
+gather/scatter helpers. Index-generation microbench (`index_gen`) and end-to-end (`fusion_qft`):
+
+| | scalar | BMI2 | speedup |
+| --- | --- | --- | --- |
+| gather (4-qubit), isolated | 0.93 G/s | **3.86 G/s (PEXT)** | **4.2×** |
+| insert_zero_bits, isolated | 0.91 G/s | **3.88 G/s (PDEP)** | **4.3×** |
+| **fused QFT-18, end-to-end** | 3.029 G/s | 3.014 G/s | **0.995× (no change)** |
+
+**This is the empirical anchor of the whole bandwidth-bound thesis** (and reproduces QuEST #717):
+BMI2 makes index generation ~4× faster *in isolation*, but the gate kernel is memory-bandwidth-
+bound, so it **washes out completely end-to-end** — index math computes *addresses*, not *memory
+traffic*. Validated against the oracle (differential suite passes with `--features bmi2`).
+
 ## single H gate (target qubit = n/2), Gelem/s — *(original run, pre-first-touch; see UPDATE above)*
 
 | n | bitshift | cpu_serial | cpu_parallel | simd_serial (f64x4) | simd_parallel |

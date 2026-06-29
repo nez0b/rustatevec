@@ -8,6 +8,10 @@ authors.workspace = true
 rust-version.workspace = true
 publish = false
 
+[features]
+# Enables the BMI2 arms of the index-generation microbenchmark (and qsv-core's PEXT/PDEP path).
+bmi2 = ["qsv-core/bmi2"]
+
 [dependencies]
 qsv-core = { path = "../qsv-core" }
 
@@ -16,6 +20,10 @@ criterion = "0.5"
 
 [[bench]]
 name = "throughput"
+harness = false
+
+[[bench]]
+name = "index_gen"
 harness = false
 
 # A long-running workload for sampling profilers (samply / Instruments / perf).

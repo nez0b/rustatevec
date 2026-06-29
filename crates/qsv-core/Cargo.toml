@@ -20,6 +20,9 @@ simd = ["dep:wide"]
 # Swaps the SIMD complex-multiply impl to `std::simd::f64x8` (512-bit, AVX-512). Requires a
 # nightly toolchain (`portable_simd`). Implies `simd`. Off by default.
 nightly-simd = ["simd"]
+# x86-64 BMI2 (PEXT/PDEP) fast path for bit-index generation (insert_zero_bits). Runtime-detected;
+# falls back to scalar on non-BMI2 CPUs. Off by default.
+bmi2 = []
 
 [dependencies]
 rayon = { version = "1", optional = true }
