@@ -10,7 +10,7 @@ honestly against the established tools.
 
 > **Statevector simulation is memory-bandwidth-bound, not compute-bound.**
 
-Applying a 1-qubit gate streams the entire \\(2^N\\)-amplitude array while doing only ~2
+Applying a 1-qubit gate streams the entire $2^N$-amplitude array while doing only ~2
 complex multiplies per 16-byte amplitude — an arithmetic intensity of roughly **0.13
 FLOP/byte**, deep in the bandwidth-bound region of the roofline. Every optimization decision
 in qsv is justified by one question:

@@ -7,8 +7,9 @@ auditable, dependency-free) from heavier bench/binding crates.
 crates/qsv-core   the product: state, gates, circuit, backends, fusion
 crates/qsv-cli    `qsv` binary (smoke runner; QASM3 + sampling later)
 crates/qsv-bench  criterion benchmarks + profiling binaries
+crates/qsv-cuda   optional GPU backend (cudarc + NVRTC; `--features cuda`)
 docs/             this mdBook (design, research, tutorial)
-references/       shallow clones of qsim/QuEST/aer/Yao/spinoza/amh-code (git-ignored)
+_local/           shallow clones of reference simulators (git-ignored)
 ```
 
 ## `qsv-core` modules

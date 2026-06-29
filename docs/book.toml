@@ -8,10 +8,13 @@ src = "src"
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"
-mathjax-support = true
 git-repository-url = "https://github.com/nez0b/rustatevec"
 no-section-label = false
 
 [output.html.fold]
 enable = true
 level = 1
+
+# Build-time KaTeX rendering (mdbook-katex preprocessor) — self-contained, no runtime MathJax CDN
+# dependency, and supports the macros we use. Math uses `$ … $` / `$$ … $$` delimiters.
+[preprocessor.katex]

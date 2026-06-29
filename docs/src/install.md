@@ -53,7 +53,7 @@ cargo install cargo-instruments        # Xcode Instruments integration
 
 ## Memory ceiling
 
-A statevector of \\(N\\) qubits in `f64` needs \\(2^N \times 16\\) bytes (real + imaginary).
+A statevector of $N$ qubits in `f64` needs $2^N \times 16$ bytes (real + imaginary).
 On a 36 GB machine the practical in-place ceiling is **~30 qubits** (`f64`, 16 GB) or **~31**
 (`f32`). qsv updates the state in place precisely because at that size there is no room for a
 second buffer.

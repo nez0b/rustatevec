@@ -62,9 +62,9 @@ assert!((s.amplitude(0b11).re - std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12);
 crates/qsv-core   core library (state, gates, circuit, backends, fusion)
 crates/qsv-cli    `qsv` binary (smoke runner; QASM3 + sampling later)
 crates/qsv-bench  criterion benchmarks + `qsv-profile` profiling workload
+crates/qsv-cuda   optional GPU backend (cudarc + NVRTC; `--features cuda`)
 docs/             mdBook documentation (design, optimization, tutorial, research)
-docs/reference/   state_vector.jl — the pedagogical reference notebook
-references/        shallow clones of qsim/QuEST/aer/Yao/spinoza/amh-code (git-ignored)
+_local/           shallow clones of reference simulators (qsim/QuEST/aer/Yao/cuQuantum; git-ignored)
 ```
 
 ## Why Rust, and what's novel

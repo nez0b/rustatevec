@@ -5,14 +5,14 @@ to a fast one, where every step is measurable and justified by a single principl
 
 ## The principle: it's memory-bandwidth-bound
 
-Consider applying one 1-qubit gate to an \\(N\\)-qubit state. The kernel must touch all
-\\(2^N\\) amplitudes, reading and writing each once. Per amplitude it does roughly **2 complex
-multiply-adds** (the \\(2\times2\\) matrix times a 2-vector). In `f64`, each amplitude is 16
+Consider applying one 1-qubit gate to an $N$-qubit state. The kernel must touch all
+$2^N$ amplitudes, reading and writing each once. Per amplitude it does roughly **2 complex
+multiply-adds** (the $2\times2$ matrix times a 2-vector). In `f64`, each amplitude is 16
 bytes (real + imaginary).
 
-\\[
+$$
 \text{arithmetic intensity} \approx \frac{\sim 8\ \text{FLOP per pair}}{2 \times 16\ \text{bytes per pair}} \approx 0.13\ \text{FLOP/byte}.
-\\]
+$$
 
 A modern CPU sustains tens of FLOP/byte before it runs out of compute; at 0.13 FLOP/byte the
 kernel is starved for **memory bandwidth**, not arithmetic. On the
@@ -29,13 +29,20 @@ the problem, and it dictates everything below.
 
 ### The clinching evidence
 
-QuEST's own BMI2 optimization ([issue #717](https://github.com/QuEST-Kit/QuEST/issues/717),
-which this project's author contributed to) replaces a bit-twiddling loop with single `PEXT`/
-`PDEP` instructions — **6–12× faster in isolation**. Its end-to-end speedup on real circuits
-is only **1.0–1.3×**, shrinking toward 1.0 as thread count rises and memory bandwidth
-saturates. The reason: it accelerates *address computation*, not *memory traffic*. This is
-the empirical anchor for treating bandwidth, not arithmetic, as the bottleneck — and for
-ordering our work accordingly.
+The bit-index generation at the kernel's core (insert-zero-bit, gather, scatter) compiles on
+x86-64 to the BMI2 `PEXT`/`PDEP` instructions, replacing a per-bit loop with a single
+instruction. qsv ships this as the `bmi2` feature, and the measurement is decisive (full numbers
+in [`bench/results/SUMMARY-xeon.md`](https://github.com/nez0b/rustatevec/blob/main/bench/results/SUMMARY-xeon.md)):
+
+- **In isolation**, PEXT gather and PDEP insert are **~4× faster** than the scalar loop (3.9 vs
+  0.9 Gelem/s on a Xeon Gold 6526Y).
+- **End-to-end** on a fused QFT-18, the same `bmi2` feature changes throughput by **0.995× — i.e.
+  not at all** (3.029 → 3.014 Gelem/s).
+
+It accelerates *address computation*, not *memory traffic*, and the kernel is bound by the latter.
+This is the empirical anchor for treating bandwidth, not arithmetic, as the bottleneck — and for
+ordering our work accordingly. (The same pattern is well known in the wider community; it was the
+substance of QuEST's BMI2 work, which this project's author contributed to.)
 
 ## The priority order
 
@@ -60,8 +67,8 @@ micro-ops only shave the constant on work you are already doing.
 
 Rather than ship one optimized backend, qsv evolves through a sequence of **separate
 backends**, each a self-contained, benchmarkable diff and one data point on the headline
-throughput/roofline plot. The progression deliberately mirrors the pedagogical
-`state_vector.jl` notebook, then goes further.
+throughput/roofline plot — a naive reference first, then each optimization layered on and measured
+in turn.
 
 | Ver | Change | Expected regime | What it demonstrates |
 | --- | --- | --- | --- |

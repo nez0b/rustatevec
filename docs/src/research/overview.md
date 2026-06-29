@@ -2,13 +2,13 @@
 
 Distilled findings from studying production statevector simulators, which justify the design
 decisions throughout this book. The full reference source is shallow-cloned under
-`references/` (git-ignored).
+`_local/` (git-ignored).
 
 ## The one finding that organizes everything
 
 > **Statevector simulation is memory-bandwidth-bound, not compute-bound.**
 
-A 1-qubit gate streams the entire \\(2^N\\)-amplitude array doing only ~2 complex multiplies
+A 1-qubit gate streams the entire $2^N$-amplitude array doing only ~2 complex multiplies
 per 16-byte amplitude → arithmetic intensity ≈ **0.13 FLOP/byte**, deep in the bandwidth-bound
 region of the roofline. Confirmed independently across qsim, Qiskit-Aer, QuEST, Yao.jl,
 cuStateVec, and spinoza. See [How we optimize](../design/optimization.md) for the consequences.

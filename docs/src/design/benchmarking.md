@@ -7,7 +7,7 @@ something if each milestone's effect is quantified honestly. The `qsv-bench` cra
 ## What we measure
 
 Throughput is reported in **amplitude-updates per second** — criterion's `Throughput::Elements`
-set to \\(2^n\\) per gate. This normalizes across qubit counts and is the natural figure of
+set to $2^n$ per gate. This normalizes across qubit counts and is the natural figure of
 merit for a bandwidth-bound kernel (it converts directly to effective GB/s: multiply by the
 bytes touched per amplitude).
 
@@ -60,9 +60,9 @@ What each milestone bought, read honestly:
 Convert the v0.5 throughput to effective memory bandwidth: each update reads and writes a
 16-byte complex amplitude = 32 bytes of traffic.
 
-\\[
+$$
 \text{n=24:}\quad 3.97\ \text{Gelem/s} \times 32\ \text{B} \approx \mathbf{127\ GB/s} \approx \mathbf{85\%}\ \text{of the M3 Pro's} \sim 150\ \text{GB/s peak.}
-\\]
+$$
 
 At 256 MB (pure DRAM) the threaded kernel is running into the **memory wall**: ~85% of peak
 bandwidth, exactly the regime the [thesis](optimization.md) predicted. At n=20 (16 MB,
