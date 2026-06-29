@@ -12,6 +12,14 @@ pub mod layout;
 use crate::complex::Cplx;
 use crate::real::Real;
 
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
+/// Below this many amplitudes the buffer is small (≤ a few MB), NUMA effects are negligible,
+/// and the parallel first-touch pass isn't worth its overhead — allocate serially.
+#[cfg(feature = "parallel")]
+const FIRST_TOUCH_MIN: usize = 1 << 18; // 256k amps = 2 MB per component buffer
+
 /// A pure-state quantum register of `n_qubits` qubits: `2^n` complex amplitudes in SoA.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StateVector<R: Real> {
@@ -24,12 +32,38 @@ impl<R: Real> StateVector<R> {
     /// All-zero buffer (not a valid normalized state on its own).
     pub fn zeros(n_qubits: u32) -> Self {
         let dim = 1usize << n_qubits;
-        Self {
+        let mut s = Self {
+            // `vec![ZERO; dim]` lowers to `alloc_zeroed` → for large `dim` the OS hands back
+            // lazily-zeroed pages that are *not yet faulted in*. `first_touch` faults them in
+            // parallel so each page lands on the NUMA node of the worker that will own it.
             re: vec![R::ZERO; dim],
             im: vec![R::ZERO; dim],
             n_qubits,
-        }
+        };
+        s.first_touch();
+        s
     }
+
+    /// NUMA-aware **first touch**: fault the freshly-allocated (lazily-zeroed) pages in parallel
+    /// with the same contiguous decomposition the kernels use, so each page is first-touched —
+    /// and thus placed — on the node of the worker that will later process that region. Serial
+    /// allocation first-touches every page on the allocating thread's node, capping large-N
+    /// throughput at one socket's memory bandwidth (measured on 2× Xeon 6526Y: ~0.33 G/s at 64
+    /// threads unpinned vs ~2.3 G/s when local). No-op without `parallel` or for small states.
+    #[cfg(feature = "parallel")]
+    fn first_touch(&mut self) {
+        let dim = self.re.len();
+        if dim < FIRST_TOUCH_MIN {
+            return;
+        }
+        let chunk = dim.div_ceil(rayon::current_num_threads().max(1));
+        self.re.par_chunks_mut(chunk).for_each(|c| c.fill(R::ZERO));
+        self.im.par_chunks_mut(chunk).for_each(|c| c.fill(R::ZERO));
+    }
+
+    #[cfg(not(feature = "parallel"))]
+    #[inline]
+    fn first_touch(&mut self) {}
 
     /// Computational basis state `|index⟩`.
     pub fn basis(n_qubits: u32, index: usize) -> Self {

@@ -4,7 +4,30 @@ Box: 2× Intel Xeon Gold 6526Y (32 cores / 64 threads, 2 NUMA nodes), AVX-512 + 
 L1d 48K, L2 2 MB/core, L3 38.4 MB/socket, 503 GB RAM. Built with `RUSTFLAGS="-C target-cpu=native"`.
 Throughput = amplitude-updates/s. Raw: `throughput-native.txt`.
 
-## single H gate (target qubit = n/2), Gelem/s
+## UPDATE (v0.8.1) — NUMA-aware first-touch allocation
+
+`StateVector::zeros` now faults its lazily-zeroed pages **in parallel** (one contiguous chunk per
+worker, `state/mod.rs`), so each page is first-touched on the NUMA node of the worker that will
+process it. Combined with **per-kernel threading thresholds** (`MIN_PAIRS_LIGHT=1<<16` for 1q/diag,
+`MIN_PAIRS_HEAVY=1<<12` for the mq kernel), single-H, n=24:
+
+| | cpu_parallel n=20 | cpu_parallel n=24 | n=16 (cache-resident) |
+| --- | --- | --- | --- |
+| before (serial alloc, 1<<12) | 5.80 | 1.53 | 0.96 (over-threaded) |
+| **after (first-touch + thresholds)** | **7.00** | **9.31 (~298 GB/s)** | **2.96** (serial fallback) |
+
+**6.1× at n=24** — the state is now distributed across *both* sockets' memory controllers with each
+thread accessing local pages, so unpinned-both-sockets (9.31) even beats single-socket `taskset`
+pinning (7.07). No `core_affinity`/`numactl` needed; the pinned pool was dropped as unnecessary.
+Serial did not regress (n=24: 0.33→0.75). Small-N over-threading fixed by the light-kernel threshold.
+
+**Honest fusion correction:** with the corrected baseline (unfused QFT now runs *serial* at small N
+instead of over-threading), fusion's apparent **2.73× at n=14 was an artifact** — fused QFT(14) is
+actually neutral/negative (328M vs unfused 391M) because at cache-resident N the light unfused
+kernels beat the heavier fused `apply_mq`. Fusion's real win is the **bandwidth-bound regime:
+1.70× at n=18** (3.00 vs 1.77 G/s). This is the physically-correct story.
+
+## single H gate (target qubit = n/2), Gelem/s — *(original run, pre-first-touch; see UPDATE above)*
 
 | n | bitshift | cpu_serial | cpu_parallel | simd_serial (f64x4) | simd_parallel |
 | --- | --- | --- | --- | --- | --- |

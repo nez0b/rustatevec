@@ -53,8 +53,9 @@ impl Default for SimdBackend {
 }
 
 /// Pairs below this many amplitude pairs run serially even when `parallel` is set.
+/// Matches `CpuBackend::PARALLEL_MIN_PAIRS` (see there for the cache-crossover rationale).
 #[cfg(all(feature = "simd", feature = "parallel"))]
-const PARALLEL_MIN_PAIRS: usize = 1 << 12;
+const PARALLEL_MIN_PAIRS: usize = 1 << 16;
 
 /// Apply the 2×2 gate to one block: SIMD over the contiguous halves, scalar remainder.
 ///

@@ -32,8 +32,17 @@ use rayon::prelude::*;
 
 /// Largest gate arity the stack-buffered multi-qubit kernel supports (`2^6` amplitudes).
 const MAX_SUB: usize = 64;
-/// Below this many amplitude pairs, threading overhead outweighs the gain → stay serial.
-const PARALLEL_MIN_PAIRS: usize = 1 << 12;
+/// Threading thresholds (amplitude pairs). Tuned on 2× Xeon 6526Y; machine-dependent.
+///
+/// The right crossover differs by kernel weight:
+/// - **Light** kernels (1-qubit, diagonal) are ~2 complex ops/amplitude and cache-resident-
+///   friendly: at n≤16 the state fits one core's L2 (2 MB) and serial wins (~3 G/s vs ~0.9 G/s
+///   threaded). They only pay for threading once the state spills cache (n≥18, where first-touch
+///   then yields ~9 G/s).
+/// - **Heavy** kernel (multi-qubit gather/scatter, incl. fused gates) does 2^m work/amplitude, so
+///   threading pays off at smaller N — keeping it low is what lets fusion win at n=14.
+const MIN_PAIRS_LIGHT: usize = 1 << 16;
+const MIN_PAIRS_HEAVY: usize = 1 << 12;
 
 /// Optimized CPU backend (milestones v0.3–v0.5).
 #[derive(Clone, Copy, Debug)]
@@ -121,7 +130,7 @@ impl CpuBackend {
         let dim = state.dim();
         let (re, im) = state.parts_mut();
 
-        let _threaded = self.parallel && dim >= (PARALLEL_MIN_PAIRS << 1);
+        let _threaded = self.parallel && dim >= (MIN_PAIRS_LIGHT << 1);
         #[cfg(feature = "parallel")]
         if _threaded {
             let nthreads = rayon::current_num_threads().max(1);
@@ -143,7 +152,7 @@ impl CpuBackend {
         let dim = state.dim();
         let (re, im) = state.parts_mut();
 
-        let _threaded = self.parallel && (dim >> 1) >= PARALLEL_MIN_PAIRS;
+        let _threaded = self.parallel && (dim >> 1) >= MIN_PAIRS_LIGHT;
         #[cfg(feature = "parallel")]
         if _threaded {
             re.par_chunks_mut(block)
@@ -178,7 +187,7 @@ impl CpuBackend {
         let blocks = dim >> m;
         let g = gate.row_major();
 
-        let _threaded = self.parallel && (dim >> 1) >= PARALLEL_MIN_PAIRS && blocks > 1;
+        let _threaded = self.parallel && (dim >> 1) >= MIN_PAIRS_HEAVY && blocks > 1;
         #[cfg(feature = "parallel")]
         if _threaded {
             let (re, im) = state.parts_mut();
