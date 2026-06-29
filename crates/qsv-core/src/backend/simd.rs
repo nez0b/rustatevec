@@ -143,6 +143,9 @@ fn simd_block(rb: &mut [f64], ib: &mut [f64], half: usize, g: [Cplx<f64>; 4]) {
     let (g10r, g10i) = (V::splat(g[2].re), V::splat(g[2].im));
     let (g11r, g11i) = (V::splat(g[3].re), V::splat(g[3].im));
 
+    // One 8-wide FMA chain per iteration. (A 2× ILP unroll was measured *slower* — the kernel is
+    // not FMA-latency-bound; LLVM already pipelines this, and 2× live state adds register
+    // pressure. See bench/results/SUMMARY-xeon.md.)
     let mut rl = re_lo.chunks_exact_mut(L);
     let mut il = im_lo.chunks_exact_mut(L);
     let mut rh = re_hi.chunks_exact_mut(L);

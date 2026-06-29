@@ -43,6 +43,30 @@ BMI2 makes index generation ~4× faster *in isolation*, but the gate kernel is m
 bound, so it **washes out completely end-to-end** — index math computes *addresses*, not *memory
 traffic*. Validated against the oracle (differential suite passes with `--features bmi2`).
 
+## UPDATE (v0.9) — locality micro-ops: all measured null/negative (the bandwidth-bound tax)
+
+Implemented and measured the v0.9 micro-optimizations; **none helped** — exactly what the
+roofline predicts once first-touch already puts the threaded kernel at ~298 GB/s. Kept the simpler
+code; the negative results are the deliverable.
+
+- **Non-temporal stores:** *not applicable.* The gate kernels are in-place read-modify-write, so
+  every cache line is already resident from the read — NT stores only help write-only streams
+  (they'd bypass cache and force re-fetch). Not implemented.
+- **ILP 2× unroll (f64x8 1q kernel):** *regressed* (simd_serial n=16 ~3.99 → 2.88 G/s). The kernel
+  is not FMA-latency-bound — LLVM already pipelines the 1× loop, and doubling live vectors added
+  register pressure. Reverted.
+- **Software prefetch (mq scattered gather):** *null/negative* (fused QFT-18: ON ≤ OFF in the same
+  run). Extra prefetch instructions don't help a bandwidth-bound kernel and can evict useful lines.
+  Reverted. (Measured under external load on the shared box; relative ON-vs-OFF still valid.)
+- **Cache-blocking the mq kernel:** *structurally N/A.* Each block's working set — `2^m` amplitudes
+  (≤256 B) + the `2^(2m)` matrix (≤4 KB for m=4) — already fits L1; the only remaining lever is the
+  inter-block stride, fixed by qubit positions and unreorderable without a transpose pass (extra
+  bandwidth = counterproductive when bandwidth-bound). Not implemented.
+
+Net v0.9: the locality wins on this kernel come from **first-touch (6.1×) and fusion (1.70× at
+n=18)** — data movement, not address/compute micro-ops. Three independent null results (SIMD width
+past cache, BMI2 end-to-end, these micro-ops) triangulate the same conclusion.
+
 ## single H gate (target qubit = n/2), Gelem/s — *(original run, pre-first-touch; see UPDATE above)*
 
 | n | bitshift | cpu_serial | cpu_parallel | simd_serial (f64x4) | simd_parallel |
