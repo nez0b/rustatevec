@@ -14,7 +14,10 @@ fn sample_ghz_yields_only_all_zero_or_all_one() {
     let (all0, all1) = (0usize, 0b111111usize);
     let mut c0 = 0;
     for o in &outcomes {
-        assert!(*o == all0 || *o == all1, "GHZ produced forbidden outcome {o:#08b}");
+        assert!(
+            *o == all0 || *o == all1,
+            "GHZ produced forbidden outcome {o:#08b}"
+        );
         if *o == all0 {
             c0 += 1;
         }

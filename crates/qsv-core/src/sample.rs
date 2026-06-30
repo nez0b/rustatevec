@@ -250,7 +250,10 @@ mod tests {
         for k in 0..4 {
             let fa = a[k] as f64 / shots as f64;
             let fb = b[k] as f64 / shots as f64;
-            assert!((fa - fb).abs() < 0.01, "outcome {k}: alias {fa} vs cdf {fb}");
+            assert!(
+                (fa - fb).abs() < 0.01,
+                "outcome {k}: alias {fa} vs cdf {fb}"
+            );
         }
     }
 
