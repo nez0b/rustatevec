@@ -23,6 +23,7 @@ use cudarc::driver::{
 };
 use cudarc::nvrtc::compile_ptx;
 
+use qsv_core::circuit::Circuit;
 use qsv_core::complex::Cplx;
 use qsv_core::gate::DenseGate;
 use qsv_core::prelude::Backend;
@@ -36,6 +37,15 @@ pub struct CudaState {
     re: CudaSlice<f64>,
     im: CudaSlice<f64>,
     n_qubits: u32,
+}
+
+/// Holds the per-gate staged device buffers (gate matrices, qubit-index arrays) alive until the
+/// stream is synchronized. Batching a whole circuit means *not* syncing per gate, so these must
+/// outlive every in-flight kernel — we stash them here and drop them after one final sync.
+#[derive(Default)]
+struct KeepAlive {
+    f64s: Vec<CudaSlice<f64>>,
+    i32s: Vec<CudaSlice<i32>>,
 }
 
 /// CUDA backend: owns the context/stream and the compiled kernel module.
@@ -92,33 +102,17 @@ impl CudaBackend {
     fn htod_i32(&self, v: &[i32]) -> CudaSlice<i32> {
         self.stream.clone_htod(v).expect("htod i32")
     }
-}
 
-impl Backend<f64> for CudaBackend {
-    type State = CudaState;
-
-    fn alloc(&self, n_qubits: u32) -> CudaState {
-        let dim = 1usize << n_qubits;
-        CudaState {
-            re: self.stream.alloc_zeros::<f64>(dim).expect("alloc re"),
-            im: self.stream.alloc_zeros::<f64>(dim).expect("alloc im"),
-            n_qubits,
-        }
-    }
-
-    fn init_basis(&self, state: &mut CudaState, basis: usize) {
-        let dim = (1u64) << state.n_qubits;
-        let basis = basis as u64;
-        let mut b = self.stream.launch_builder(&self.f_init);
-        b.arg(&mut state.re)
-            .arg(&mut state.im)
-            .arg(&basis)
-            .arg(&dim);
-        unsafe { b.launch(Self::cfg(dim)) }.expect("launch init_basis");
-        self.stream.synchronize().expect("sync");
-    }
-
-    fn apply(&self, state: &mut CudaState, gate: &DenseGate<f64>, qubits: &[u32]) {
+    /// Launch the kernel(s) for one gate **without synchronizing**. Any staged device buffers
+    /// (gate matrix / qubit indices) are pushed into `keep` so they outlive the in-flight kernel
+    /// until the caller's eventual `stream.synchronize()`.
+    fn launch_gate(
+        &self,
+        state: &mut CudaState,
+        gate: &DenseGate<f64>,
+        qubits: &[u32],
+        keep: &mut KeepAlive,
+    ) {
         let dim = (1u64) << state.n_qubits;
 
         if gate.is_diagonal() {
@@ -144,6 +138,9 @@ impl Backend<f64> for CudaBackend {
                 .arg(&mi)
                 .arg(&dim);
             unsafe { b.launch(Self::cfg(dim)) }.expect("launch diagonal");
+            keep.f64s.push(d_dr);
+            keep.f64s.push(d_di);
+            keep.i32s.push(d_q);
         } else if qubits.len() == 1 {
             let q = qubits[0];
             let g00 = gate.at(0, 0);
@@ -165,6 +162,7 @@ impl Backend<f64> for CudaBackend {
                 .arg(&g11.im)
                 .arg(&n_pairs);
             unsafe { b.launch(Self::cfg(n_pairs)) }.expect("launch 1q");
+            // 1q passes only scalars by value — nothing to keep alive.
         } else {
             let m = qubits.len();
             let sub = 1usize << m;
@@ -193,10 +191,58 @@ impl Backend<f64> for CudaBackend {
                 .arg(&mi32)
                 .arg(&blocks);
             unsafe { b.launch(Self::cfg(blocks)) }.expect("launch mq");
+            keep.f64s.push(d_mr);
+            keep.f64s.push(d_mi);
+            keep.i32s.push(d_qsorted);
+            keep.i32s.push(d_qorig);
         }
-        // Correctness-first: synchronize so the staged host buffers above stay alive until the
-        // launch completes. Batching/streaming is a later optimization.
+    }
+}
+
+impl Backend<f64> for CudaBackend {
+    type State = CudaState;
+
+    fn alloc(&self, n_qubits: u32) -> CudaState {
+        let dim = 1usize << n_qubits;
+        CudaState {
+            re: self.stream.alloc_zeros::<f64>(dim).expect("alloc re"),
+            im: self.stream.alloc_zeros::<f64>(dim).expect("alloc im"),
+            n_qubits,
+        }
+    }
+
+    fn init_basis(&self, state: &mut CudaState, basis: usize) {
+        let dim = (1u64) << state.n_qubits;
+        let basis = basis as u64;
+        let mut b = self.stream.launch_builder(&self.f_init);
+        b.arg(&mut state.re)
+            .arg(&mut state.im)
+            .arg(&basis)
+            .arg(&dim);
+        unsafe { b.launch(Self::cfg(dim)) }.expect("launch init_basis");
         self.stream.synchronize().expect("sync");
+    }
+
+    fn apply(&self, state: &mut CudaState, gate: &DenseGate<f64>, qubits: &[u32]) {
+        let mut keep = KeepAlive::default();
+        self.launch_gate(state, gate, qubits, &mut keep);
+        // One sync per gate when called standalone; the staged buffers in `keep` drop after.
+        self.stream.synchronize().expect("sync");
+    }
+
+    /// Batch the whole circuit on one stream: launch every gate without an intervening sync
+    /// (staged buffers held in `keep`), then synchronize once. This amortizes the per-gate
+    /// host↔device round-trip that dominates GPU gate-apply — the headline GPU optimization.
+    fn execute(&self, circuit: &Circuit<f64>) -> CudaState {
+        let mut state = self.alloc(circuit.n_qubits());
+        self.init_basis(&mut state, 0);
+        let mut keep = KeepAlive::default();
+        for op in circuit.ops() {
+            self.launch_gate(&mut state, op.gate(), op.qubits(), &mut keep);
+        }
+        self.stream.synchronize().expect("sync");
+        drop(keep);
+        state
     }
 
     fn amplitude(&self, state: &CudaState, index: usize) -> Cplx<f64> {

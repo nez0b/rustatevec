@@ -52,6 +52,35 @@ fn run() {
             println!("{n:>3}  {label}      {g:>7.2}   {c:>7.2}   {ratio:>5.2}x   {gbps:>6.0}");
         }
     }
+
+    // Circuit-level batching: per-gate sync (each `apply` synchronizes) vs batched `execute`
+    // (one sync for the whole circuit on a single stream). The QFT mixes 1q + diagonal cphases.
+    use qsv_core::circuits::qft;
+    println!("\nGPU circuit batching — QFT, total wall-clock (ms)");
+    println!("  n   per-gate-sync   batched-execute   speedup");
+    for &n in &[18u32, 22, 26] {
+        let circ = qft(n);
+        let ops = circ.ops();
+        // warmup
+        let _ = gpu.execute(&circ);
+
+        let t = Instant::now();
+        let mut st = gpu.alloc(n);
+        gpu.init_basis(&mut st, 0);
+        for op in ops {
+            gpu.apply(&mut st, op.gate(), op.qubits()); // syncs each gate
+        }
+        let per_gate = t.elapsed().as_secs_f64() * 1e3;
+
+        let t = Instant::now();
+        let _ = gpu.execute(&circ); // one sync
+        let batched = t.elapsed().as_secs_f64() * 1e3;
+
+        println!(
+            "{n:>3}   {per_gate:>10.2}    {batched:>13.2}    {:>5.2}x",
+            per_gate / batched
+        );
+    }
 }
 
 #[cfg(not(feature = "cuda"))]
